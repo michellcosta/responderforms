@@ -78,6 +78,23 @@ Exemplo local:
 
 Nesse modo, todas as respostas de `fixedAnswers` aparecem para edição e ficam salvas no navegador do admin.
 
+### Importar respostas fixas automaticamente (sem digitar)
+
+No Google Forms:
+
+1. Clique em **⋮ (três pontos) → Receber link pré-preenchido**
+2. Preencha as respostas que quer deixar fixas
+3. Gere o link e copie
+
+No seu site:
+
+1. Abra `?admin=1`
+2. Cole o link no campo **Importar de link pré-preenchido do Google Forms**
+3. Clique em **Importar respostas do link**
+4. Clique em **Salvar respostas fixas**
+
+Pronto: o sistema extrai automaticamente todos os `entry.*` do link e preenche as respostas fixas (exceto nome e email).
+
 ## Publicar no GitHub Pages (recomendado)
 
 1. Suba este projeto para um repositório no GitHub.

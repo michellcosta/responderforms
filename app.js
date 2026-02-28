@@ -3,6 +3,7 @@
   const ADMIN_STORAGE_KEY = "responderforms:adminFixedAnswers";
   const FORM_SCHEMA_KEY = "responderforms:formSchema";
   const ADMIN_AUTH_KEY = "responderforms:adminAuth";
+  const SUBMISSIONS_KEY = "responderforms:submissions";
   const TEMA_ENTRY_ID = "entry.976109499";
 
   const form = document.getElementById("responder-form");
@@ -64,6 +65,7 @@
         body: payload.toString(),
       });
 
+      appendLocalSubmission({ name, email, date: new Date().toISOString() });
       setMessage("Enviado com sucesso.", false, true);
     } catch {
       setMessage("Falha no envio. Verifique internet e tente novamente.", true);
@@ -185,47 +187,80 @@
     const config = window.FORM_CONFIG || {};
     const csvUrl = config.responsesCsvUrl;
 
-    if (!csvUrl) {
+    const localSubmissions = readJSON(SUBMISSIONS_KEY) || [];
+    let remoteSubmissions = [];
+
+    if (csvUrl) {
+      try {
+        const response = await fetch(csvUrl, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const csvText = await response.text();
+        const rows = parseCsv(csvText);
+        if (rows.length) {
+          const headers = rows[0].map((h) => h.trim().toLowerCase());
+          const nameIdx = headers.findIndex((h) => h.includes("nome"));
+          const emailIdx = headers.findIndex((h) => h.includes("mail"));
+          const dateIdx = headers.findIndex((h) => h.includes("carimbo") || h.includes("data"));
+
+          remoteSubmissions = rows
+            .slice(1)
+            .filter((r) => r.some((c) => c.trim()))
+            .map((r) => ({
+              name: r[nameIdx] || "-",
+              email: r[emailIdx] || "-",
+              date: r[dateIdx] || "-",
+              source: "csv",
+            }));
+        }
+      } catch {
+        // se falhar o CSV, seguimos com lista local
+      }
+    }
+
+    const localMapped = localSubmissions.map((item) => ({
+      name: item.name || "-",
+      email: item.email || "-",
+      date: formatDate(item.date),
+      source: "local",
+    }));
+
+    const merged = [...localMapped, ...remoteSubmissions];
+
+    if (!merged.length) {
       submissionsStatus.textContent =
-        "Defina responsesCsvUrl no config.js para listar usuários enviados.";
+        "Nenhum envio encontrado ainda. Faça um envio para aparecer aqui.";
       submissionsTableBody.innerHTML = "";
       return;
     }
 
-    try {
-      const response = await fetch(csvUrl, { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const csvText = await response.text();
-      const rows = parseCsv(csvText);
-      if (!rows.length) {
-        submissionsStatus.textContent = "Nenhum envio encontrado.";
-        submissionsTableBody.innerHTML = "";
-        return;
-      }
+    submissionsTableBody.innerHTML = merged
+      .map((r) => {
+        const name = escapeHtml(r.name);
+        const email = escapeHtml(r.email);
+        const date = escapeHtml(r.date);
+        return `<tr><td>${name}</td><td>${email}</td><td>${date}</td></tr>`;
+      })
+      .join("");
 
-      const headers = rows[0].map((h) => h.trim().toLowerCase());
-      const nameIdx = headers.findIndex((h) => h.includes("nome"));
-      const emailIdx = headers.findIndex((h) => h.includes("mail"));
-      const dateIdx = headers.findIndex((h) => h.includes("carimbo") || h.includes("data"));
-
-      const dataRows = rows.slice(1).filter((r) => r.some((c) => c.trim()));
-      submissionsTableBody.innerHTML = dataRows
-        .map((r) => {
-          const name = escapeHtml(r[nameIdx] || "-");
-          const email = escapeHtml(r[emailIdx] || "-");
-          const date = escapeHtml(r[dateIdx] || "-");
-          return `<tr><td>${name}</td><td>${email}</td><td>${date}</td></tr>`;
-        })
-        .join("");
-
-      submissionsStatus.textContent = `${dataRows.length} envio(s) carregado(s).`;
-    } catch {
+    if (csvUrl) {
+      submissionsStatus.textContent = `${merged.length} envio(s) carregado(s) (local + planilha).`;
+    } else {
       submissionsStatus.textContent =
-        "Não foi possível carregar a lista de usuários. Verifique responsesCsvUrl.";
-      submissionsTableBody.innerHTML = "";
+        `${merged.length} envio(s) carregado(s) do navegador local.`;
     }
+  }
+
+  function appendLocalSubmission(item) {
+    const current = readJSON(SUBMISSIONS_KEY) || [];
+    current.unshift(item);
+    localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(current.slice(0, 500)));
+  }
+
+  function formatDate(isoDate) {
+    if (!isoDate) return "-";
+    const d = new Date(isoDate);
+    if (Number.isNaN(d.getTime())) return String(isoDate);
+    return d.toLocaleString("pt-BR");
   }
 
   function parseCsv(text) {

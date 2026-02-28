@@ -134,6 +134,7 @@ button:disabled {
 
 .admin-option-picker {
   margin-top: 0.45rem;
+  background: #f3f4f6;
 }
 
 #admin-message {

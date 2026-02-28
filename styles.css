@@ -141,3 +141,9 @@ button:disabled {
   margin-top: 0.75rem;
   color: #047857;
 }
+
+.admin-login {
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #e5e7eb;
+}

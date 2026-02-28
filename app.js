@@ -2,17 +2,22 @@
   const USER_STORAGE_KEY = "responderforms:user";
   const ADMIN_STORAGE_KEY = "responderforms:adminFixedAnswers";
   const FORM_SCHEMA_KEY = "responderforms:formSchema";
+  const ADMIN_AUTH_KEY = "responderforms:adminAuth";
 
   const form = document.getElementById("responder-form");
   const message = document.getElementById("message");
-  const clearButton = document.getElementById("clear-user");
   const userPanel = document.getElementById("user-panel");
   const adminPanel = document.getElementById("admin-panel");
   const adminFields = document.getElementById("admin-fields");
   const saveAdminButton = document.getElementById("save-admin");
   const adminMessage = document.getElementById("admin-message");
+  const adminLoginToggle = document.getElementById("admin-login-toggle");
+  const adminLoginForm = document.getElementById("admin-login-form");
+  const adminLoginCancel = document.getElementById("admin-login-cancel");
+  const logoutAdminButton = document.getElementById("logout-admin");
 
   hydrateSavedUser();
+  initUserActions();
   initAdminPanel();
 
   form.addEventListener("submit", async (event) => {
@@ -64,14 +69,33 @@
     }
   });
 
-  form.name.addEventListener("blur", () => maybeSaveCurrentUser());
-  form.email.addEventListener("blur", () => maybeSaveCurrentUser());
+  function initUserActions() {
+    form.name.addEventListener("blur", () => maybeSaveCurrentUser());
+    form.email.addEventListener("blur", () => maybeSaveCurrentUser());
 
-  clearButton.addEventListener("click", () => {
-    localStorage.removeItem(USER_STORAGE_KEY);
-    form.reset();
-    setMessage("Dados removidos. Informe novo nome e email.", false, true);
-  });
+    adminLoginToggle.addEventListener("click", () => {
+      adminLoginForm.classList.remove("hidden");
+    });
+
+    adminLoginCancel.addEventListener("click", () => {
+      adminLoginForm.reset();
+      adminLoginForm.classList.add("hidden");
+    });
+
+    adminLoginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const login = adminLoginForm["admin-user"].value.trim();
+      const password = adminLoginForm["admin-pass"].value.trim();
+
+      if (login === "admin" && password === "admin123") {
+        localStorage.setItem(ADMIN_AUTH_KEY, "1");
+        window.location.search = "?admin=1";
+        return;
+      }
+
+      setMessage("Login admin inválido.", true);
+    });
+  }
 
   function maybeSaveCurrentUser() {
     const name = form.name.value.trim();
@@ -104,6 +128,12 @@
     const isAdminMode = query.get("admin") === "1";
     if (!isAdminMode) return;
 
+    if (localStorage.getItem(ADMIN_AUTH_KEY) !== "1") {
+      window.history.replaceState({}, "", window.location.pathname);
+      setMessage("Faça login admin para acessar o painel.", true);
+      return;
+    }
+
     adminPanel.classList.remove("hidden");
     userPanel.classList.add("hidden");
     loadSchemaAndRender();
@@ -121,9 +151,11 @@
       renderAdminFields();
     });
 
-
+    logoutAdminButton.addEventListener("click", () => {
+      localStorage.removeItem(ADMIN_AUTH_KEY);
+      window.location.search = "";
+    });
   }
-
 
   function setAdminMessage(text) {
     if (!adminMessage) return;
@@ -149,20 +181,30 @@
         const schemaField = schemaMap.get(entryId);
         const label = schemaField?.label || entryId;
         const options = schemaField?.options || [];
-        const currentValue = String(value ?? '');
+        const currentValue = String(value ?? "");
 
         if (options.length > 0) {
           const hasCurrent = options.includes(currentValue);
           const optionTags = [
             '<option value="">Respostas</option>',
-            ...(!hasCurrent && currentValue ? [`<option value="${escapeHtml(currentValue)}">${escapeHtml(currentValue)} (atual)</option>`] : []),
-            ...options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`),
-          ].join('');
+            ...(!hasCurrent && currentValue
+              ? [
+                  `<option value="${escapeHtml(currentValue)}">${escapeHtml(
+                    currentValue
+                  )} (atual)</option>`,
+                ]
+              : []),
+            ...options.map(
+              (option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`
+            ),
+          ].join("");
 
           return `
             <div class="admin-field">
               <label for="admin-${entryId}">${escapeHtml(label)} <small>(${entryId})</small></label>
-              <textarea id="admin-${entryId}" data-entry-id="${entryId}" rows="2">${escapeHtml(currentValue)}</textarea>
+              <textarea id="admin-${entryId}" data-entry-id="${entryId}" rows="2">${escapeHtml(
+            currentValue
+          )}</textarea>
               <select class="admin-option-picker" data-entry-option-for="${entryId}">${optionTags}</select>
             </div>
           `;
@@ -171,20 +213,22 @@
         return `
           <div class="admin-field">
             <label for="admin-${entryId}">${escapeHtml(label)} <small>(${entryId})</small></label>
-            <textarea id="admin-${entryId}" data-entry-id="${entryId}" rows="2">${escapeHtml(currentValue)}</textarea>
+            <textarea id="admin-${entryId}" data-entry-id="${entryId}" rows="2">${escapeHtml(
+          currentValue
+        )}</textarea>
           </div>
         `;
       })
-      .join('');
+      .join("");
 
     bindOptionPickers();
   }
 
   function bindOptionPickers() {
-    const pickers = adminFields.querySelectorAll('select.admin-option-picker[data-entry-option-for]');
+    const pickers = adminFields.querySelectorAll("select.admin-option-picker[data-entry-option-for]");
     pickers.forEach((picker) => {
-      picker.addEventListener('change', () => {
-        const entryId = picker.getAttribute('data-entry-option-for');
+      picker.addEventListener("change", () => {
+        const entryId = picker.getAttribute("data-entry-option-for");
         const target = adminFields.querySelector(`textarea[data-entry-id="${entryId}"]`);
         if (!target || !picker.value) return;
         target.value = picker.value;

@@ -78,6 +78,12 @@ Exemplo local:
 
 Nesse modo, todas as respostas de `fixedAnswers` aparecem para edição e ficam salvas no navegador do admin.
 
+- O botão **Trocar usuário** foi substituído por **Login admin**.
+- Credenciais fixas do admin:
+  - login: `admin`
+  - senha: `admin123`
+- Sem login admin válido, `?admin=1` não abre o painel.
+
 - No modo admin (`?admin=1`), a área de usuário (Nome/Email/Enviar/Trocar usuário) fica oculta.
 - Ao clicar em **Salvar respostas fixas**, aparece a confirmação `Respostas fixas do admin salvas com sucesso.` abaixo do botão.
 

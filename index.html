@@ -21,7 +21,20 @@
 
           <div class="actions">
             <button type="submit">Enviar</button>
-            <button type="button" id="clear-user" class="secondary">Trocar usuário</button>
+            <button type="button" id="admin-login-toggle" class="secondary">Login admin</button>
+          </div>
+        </form>
+
+        <form id="admin-login-form" class="admin-login hidden" novalidate>
+          <label for="admin-user">Login admin</label>
+          <input id="admin-user" name="admin-user" type="text" autocomplete="username" required />
+
+          <label for="admin-pass">Senha</label>
+          <input id="admin-pass" name="admin-pass" type="password" autocomplete="current-password" required />
+
+          <div class="actions">
+            <button type="submit">Entrar</button>
+            <button type="button" id="admin-login-cancel" class="secondary">Cancelar</button>
           </div>
         </form>
 
@@ -33,7 +46,10 @@
         <p>Edite qualquer resposta fixa abaixo. Essas alterações ficam salvas no navegador deste admin.</p>
 
         <div id="admin-fields"></div>
-        <button id="save-admin" type="button">Salvar respostas fixas</button>
+        <div class="actions">
+          <button id="save-admin" type="button">Salvar respostas fixas</button>
+          <button id="logout-admin" type="button" class="secondary">Sair do admin</button>
+        </div>
         <p id="admin-message" aria-live="polite"></p>
       </section>
     </main>

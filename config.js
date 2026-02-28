@@ -12,18 +12,18 @@ window.FORM_CONFIG = {
   // IMPORTANTE: para perguntas de múltipla escolha, use o texto EXATO de uma opção do Forms.
   fixedAnswers: {
     // Cargo / Função *
-    "entry.987323929": "Gerente",
+    "entry.1530674274": "Dispatcher",
     // Empresa *
-    "entry.1605377415": "Empresa Exemplo",
+    "entry.170197194": "DHL",
     // Tema *
-    "entry.1530674274": "Segurança",
+    "entry.976109499": "Segurança no período de férias",
     // Qual sua opinião sobre o tema? (opcional)
-    "entry.170197194": "Sem comentários.",
+    "entry.987323929": "Sem comentários.",
     // Operação *
-    "entry.976109499": "Operação A",
+    "entry.2004173578": "LAST MILE - LM",
     // Site (Localidade) *
-    "entry.2004173578": "Localidade A",
+    "entry.2067716336": "BRXSP3_Vila Guilherme",
     // Se você respondeu OUTROS na pergunta acima, especifique a localidade: (opcional)
-    "entry.2067716336": "",
+    "entry.1605377415": "",
   },
 };

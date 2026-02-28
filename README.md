@@ -118,6 +118,8 @@ npm run sync:schema
 - Quando o `form-schema.json` contém `options`, o admin vê **textarea + menu de respostas**.
 - O admin escolhe no menu e o texto é copiado automaticamente para o textarea do campo.
 - Assim você mantém edição manual quando quiser, mas com opção de selecionar exatamente o texto do Forms.
+- O arquivo `form-schema.json` de exemplo pode vir com lista resumida em alguns campos muito grandes (como Empresa/Site).
+- Para carregar a lista completa diretamente do Forms, rode `npm run sync:schema` ou o workflow **Sync Google Form schema**.
 - Para atualizar automaticamente quando o Forms mudar:
 
 ```bash

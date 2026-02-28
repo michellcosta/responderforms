@@ -127,3 +127,5 @@ button:disabled {
 .hidden {
   display: none;
 }
+
+.admin-field small { color: #6b7280; font-weight: 500; }

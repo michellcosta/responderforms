@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-02-28T00:00:00.000Z",
+  "formId": "1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ",
+  "sourceUrl": "https://docs.google.com/forms/d/e/1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ/viewform",
+  "fields": [
+    { "entryId": "entry.859537025", "label": "E-mail *" },
+    { "entryId": "entry.305174092", "label": "Nome Completo *" },
+    { "entryId": "entry.987323929", "label": "Cargo / Função *" },
+    { "entryId": "entry.1605377415", "label": "Empresa *" },
+    { "entryId": "entry.1530674274", "label": "Tema *" },
+    { "entryId": "entry.170197194", "label": "Qual sua opinião sobre o tema?" },
+    { "entryId": "entry.976109499", "label": "Operação *" },
+    { "entryId": "entry.2004173578", "label": "Site (Localidade) *" },
+    { "entryId": "entry.2067716336", "label": "Se você respondeu OUTROS na pergunta acima, especifique a localidade:" }
+  ]
+}

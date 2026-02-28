@@ -1,0 +1,25 @@
+name: Sync Google Form schema
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Generate schema
+        run: node scripts/sync-form-schema.mjs
+      - name: Commit schema changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: sync Google Form schema"
+          file_pattern: form-schema.json

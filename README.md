@@ -95,6 +95,22 @@ No seu site:
 
 Pronto: o sistema extrai automaticamente todos os `entry.*` do link e preenche as respostas fixas (exceto nome e email).
 
+### Ler estrutura do Forms automaticamente (labels dos campos)
+
+Este projeto agora mantém um `form-schema.json` com os campos do Google Forms.
+No painel admin, os campos aparecem com o nome da pergunta (não só `entry.xxxxx`).
+
+- Sincronização manual local:
+
+```bash
+npm run sync:schema
+```
+
+- Sincronização automática no GitHub:
+  - workflow `Sync Google Form schema` roda a cada 6 horas e atualiza `form-schema.json`.
+
+> Se o Google bloquear acesso no seu ambiente local, rode apenas no GitHub Actions (lá costuma funcionar melhor).
+
 ## Publicar no GitHub Pages (recomendado)
 
 1. Suba este projeto para um repositório no GitHub.

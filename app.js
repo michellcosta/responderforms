@@ -1,6 +1,7 @@
 (function init() {
   const USER_STORAGE_KEY = "responderforms:user";
   const ADMIN_STORAGE_KEY = "responderforms:adminFixedAnswers";
+  const FORM_SCHEMA_KEY = "responderforms:formSchema";
 
   const form = document.getElementById("responder-form");
   const message = document.getElementById("message");
@@ -104,7 +105,7 @@
     if (!isAdminMode) return;
 
     adminPanel.classList.remove("hidden");
-    renderAdminFields();
+    loadSchemaAndRender();
 
     saveAdminButton.addEventListener("click", () => {
       const values = {};
@@ -142,6 +143,8 @@
   function renderAdminFields() {
     const config = window.FORM_CONFIG || {};
     const merged = getMergedFixedAnswers(config.fixedAnswers || {});
+    const schema = readJSON(FORM_SCHEMA_KEY);
+    const labelMap = new Map((schema?.fields || []).map((field) => [field.entryId, field.label]));
 
     const entries = Object.entries(merged);
     if (!entries.length) {
@@ -151,19 +154,33 @@
     }
 
     adminFields.innerHTML = entries
-      .map(
-        ([entryId, value]) => `
+      .map(([entryId, value]) => {
+        const label = labelMap.get(entryId) || entryId;
+        return `
           <div class="admin-field">
-            <label for="admin-${entryId}">${entryId}</label>
+            <label for="admin-${entryId}">${escapeHtml(label)} <small>(${entryId})</small></label>
             <textarea id="admin-${entryId}" data-entry-id="${entryId}" rows="2">${escapeHtml(
           String(value)
         )}</textarea>
           </div>
-        `
-      )
+        `;
+      })
       .join("");
   }
 
+  async function loadSchemaAndRender() {
+    try {
+      const response = await fetch("form-schema.json", { cache: "no-store" });
+      if (response.ok) {
+        const schema = await response.json();
+        localStorage.setItem(FORM_SCHEMA_KEY, JSON.stringify(schema));
+      }
+    } catch {
+      // segue com schema do cache/local
+    }
+
+    renderAdminFields();
+  }
 
   function importFromPrefilledLink(rawLink) {
     try {

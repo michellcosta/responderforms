@@ -1,0 +1,9 @@
+{
+  "name": "responderforms",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "sync:schema": "node scripts/sync-form-schema.mjs"
+  }
+}

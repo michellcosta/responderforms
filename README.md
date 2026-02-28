@@ -115,6 +115,15 @@ npm run sync:schema
 
 ### Escolher valores exatamente como no Google Forms
 
+### Padrões já configurados neste projeto
+
+- Empresa: `DELUNA`
+- Qual sua opinião sobre o tema?: vazio
+- Se você respondeu OUTROS...: vazio
+- Operação: opções corretas carregadas do Forms
+- Site (Localidade): `SRJ8_Niterói (Itaboraí)`
+- Tema: menu com as 5 últimas respostas
+
 - Quando o `form-schema.json` contém `options`, o admin vê **textarea + menu de respostas**.
 - O admin escolhe no menu e o texto é copiado automaticamente para o textarea do campo.
 - Assim você mantém edição manual quando quiser, mas com opção de selecionar exatamente o texto do Forms.

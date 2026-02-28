@@ -37,7 +37,8 @@
         "DHL",
         "JADLOG",
         "JSL",
-        "MERCADO LIVRE"
+        "MERCADO LIVRE",
+        "DELUNA"
       ]
     },
     {
@@ -45,7 +46,6 @@
       "label": "Tema",
       "type": "dropdown",
       "options": [
-        "Segurança no período de férias",
         "Cuidados em Periodo de Chuva",
         "Condições Adversas - Raios",
         "Regras de Segurança",
@@ -80,7 +80,8 @@
         "BRSP02_Cajamar",
         "BRXSP3_Vila Guilherme",
         "SSP5_Arena",
-        "SSP48_Jaguare"
+        "SSP48_Jaguare",
+        "SRJ8_Niterói (Itaboraí)"
       ]
     },
     {

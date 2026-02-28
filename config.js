@@ -14,15 +14,15 @@ window.FORM_CONFIG = {
     // Cargo / Função *
     "entry.1530674274": "Dispatcher",
     // Empresa *
-    "entry.170197194": "DHL",
+    "entry.170197194": "DELUNA",
     // Tema *
-    "entry.976109499": "Segurança no período de férias",
+    "entry.976109499": "Risco com Celular",
     // Qual sua opinião sobre o tema? (opcional)
-    "entry.987323929": "Sem comentários.",
+    "entry.987323929": "",
     // Operação *
     "entry.2004173578": "LAST MILE - LM",
     // Site (Localidade) *
-    "entry.2067716336": "BRXSP3_Vila Guilherme",
+    "entry.2067716336": "SRJ8_Niterói (Itaboraí)",
     // Se você respondeu OUTROS na pergunta acima, especifique a localidade: (opcional)
     "entry.1605377415": "",
   },

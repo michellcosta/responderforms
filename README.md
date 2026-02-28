@@ -78,6 +78,9 @@ Exemplo local:
 
 Nesse modo, todas as respostas de `fixedAnswers` aparecem para edição e ficam salvas no navegador do admin.
 
+- No modo admin (`?admin=1`), a área de usuário (Nome/Email/Enviar/Trocar usuário) fica oculta.
+- Ao clicar em **Salvar respostas fixas**, aparece a confirmação `Respostas fixas do admin salvas com sucesso.` abaixo do botão.
+
 ### Ler estrutura do Forms automaticamente (labels dos campos)
 
 Este projeto agora mantém um `form-schema.json` com os campos do Google Forms.

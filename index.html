@@ -8,23 +8,25 @@
   </head>
   <body>
     <main class="card">
-      <h1>Responder formulário</h1>
-      <p class="subtitle">Preencha seus dados uma vez e depois use apenas o botão Enviar.</p>
+      <section id="user-panel">
+        <h1>Responder formulário</h1>
+        <p class="subtitle">Preencha seus dados uma vez e depois use apenas o botão Enviar.</p>
 
-      <form id="responder-form" novalidate>
-        <label for="name">Nome</label>
-        <input id="name" name="name" type="text" autocomplete="name" required />
+        <form id="responder-form" novalidate>
+          <label for="name">Nome</label>
+          <input id="name" name="name" type="text" autocomplete="name" required />
 
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" autocomplete="email" required />
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required />
 
-        <div class="actions">
-          <button type="submit">Enviar</button>
-          <button type="button" id="clear-user" class="secondary">Trocar usuário</button>
-        </div>
-      </form>
+          <div class="actions">
+            <button type="submit">Enviar</button>
+            <button type="button" id="clear-user" class="secondary">Trocar usuário</button>
+          </div>
+        </form>
 
-      <p id="message" aria-live="polite"></p>
+        <p id="message" aria-live="polite"></p>
+      </section>
 
       <section id="admin-panel" class="admin hidden" aria-label="Painel do administrador">
         <h2>Painel admin</h2>
@@ -32,8 +34,8 @@
 
         <div id="admin-fields"></div>
         <button id="save-admin" type="button">Salvar respostas fixas</button>
+        <p id="admin-message" aria-live="polite"></p>
       </section>
-
     </main>
 
     <script src="config.js"></script>

@@ -6,9 +6,11 @@
   const form = document.getElementById("responder-form");
   const message = document.getElementById("message");
   const clearButton = document.getElementById("clear-user");
+  const userPanel = document.getElementById("user-panel");
   const adminPanel = document.getElementById("admin-panel");
   const adminFields = document.getElementById("admin-fields");
   const saveAdminButton = document.getElementById("save-admin");
+  const adminMessage = document.getElementById("admin-message");
 
   hydrateSavedUser();
   initAdminPanel();
@@ -103,6 +105,7 @@
     if (!isAdminMode) return;
 
     adminPanel.classList.remove("hidden");
+    userPanel.classList.add("hidden");
     loadSchemaAndRender();
 
     saveAdminButton.addEventListener("click", () => {
@@ -114,11 +117,18 @@
       });
 
       localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(values));
-      setMessage("Respostas fixas do admin salvas com sucesso.", false, true);
+      setAdminMessage("Respostas fixas do admin salvas com sucesso.");
       renderAdminFields();
     });
 
 
+  }
+
+
+  function setAdminMessage(text) {
+    if (!adminMessage) return;
+    adminMessage.textContent = text;
+    adminMessage.classList.add("success");
   }
 
   function renderAdminFields() {

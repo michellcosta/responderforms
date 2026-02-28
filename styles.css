@@ -135,3 +135,9 @@ button:disabled {
 .admin-option-picker {
   margin-top: 0.45rem;
 }
+
+#admin-message {
+  min-height: 1.4rem;
+  margin-top: 0.75rem;
+  color: #047857;
+}

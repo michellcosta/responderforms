@@ -9,8 +9,6 @@
   const adminPanel = document.getElementById("admin-panel");
   const adminFields = document.getElementById("admin-fields");
   const saveAdminButton = document.getElementById("save-admin");
-  const prefilledLinkInput = document.getElementById("prefilled-link");
-  const importPrefilledButton = document.getElementById("import-prefilled");
 
   hydrateSavedUser();
   initAdminPanel();
@@ -121,23 +119,6 @@
     });
 
 
-    importPrefilledButton.addEventListener("click", () => {
-      const rawLink = prefilledLinkInput.value.trim();
-      if (!rawLink) {
-        setMessage("Cole um link pré-preenchido antes de importar.", true);
-        return;
-      }
-
-      const imported = importFromPrefilledLink(rawLink);
-      if (!imported) {
-        setMessage("Não foi possível importar. Verifique se o link é do Google Forms pré-preenchido.", true);
-        return;
-      }
-
-      localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(imported));
-      setMessage("Respostas importadas com sucesso do link pré-preenchido.", false, true);
-      renderAdminFields();
-    });
   }
 
   function renderAdminFields() {
@@ -213,30 +194,6 @@
     }
 
     renderAdminFields();
-  }
-
-  function importFromPrefilledLink(rawLink) {
-    try {
-      const parsed = new URL(rawLink);
-      const isGoogleForm = parsed.hostname.includes("google.com") || parsed.hostname.includes("googleusercontent.com");
-      if (!isGoogleForm) {
-        return null;
-      }
-
-      const params = parsed.searchParams;
-      const config = window.FORM_CONFIG || {};
-      const fixedAnswers = {};
-
-      for (const [key, value] of params.entries()) {
-        if (!key.startsWith("entry.")) continue;
-        if (key === config.nameEntryId || key === config.emailEntryId) continue;
-        fixedAnswers[key] = value;
-      }
-
-      return Object.keys(fixedAnswers).length ? fixedAnswers : null;
-    } catch {
-      return null;
-    }
   }
 
   function isValidConfig(config) {

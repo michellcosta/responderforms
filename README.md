@@ -88,6 +88,20 @@ Nesse modo, todas as respostas de `fixedAnswers` aparecem para edição e ficam 
 
 > Depois de publicado, você não precisa usar `localhost`.
 
+## Se o link do Pages continuar em 404
+
+Faça estes passos no GitHub (uma vez):
+
+1. **Settings → Pages**
+2. Em **Build and deployment / Source**, escolha **Deploy from a branch**
+3. Em **Branch**, selecione **`gh-pages`** e pasta **`/ (root)`**
+4. Salve
+5. Vá na aba **Actions** e rode o workflow **"Deploy to gh-pages branch (fallback)"**
+6. Aguarde 1–3 minutos e abra:
+   - `https://michellcosta.github.io/responderforms/`
+
+Esse fluxo fallback evita dependência do modo "GitHub Actions" do Pages e costuma resolver 404 persistente.
+
 ## Executar localmente
 
 Use um dos jeitos abaixo:

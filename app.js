@@ -18,6 +18,7 @@
 
   hydrateSavedUser();
   initUserActions();
+  initLoginMode();
   initAdminPanel();
 
   form.addEventListener("submit", async (event) => {
@@ -69,17 +70,23 @@
     }
   });
 
+
+  function initLoginMode() {
+    const query = new URLSearchParams(window.location.search);
+    const isAdminLoginMode = query.get("admin") === "login";
+    if (!isAdminLoginMode) return;
+
+    adminLoginForm.classList.remove("hidden");
+    adminLoginForm.querySelector('#admin-user').focus();
+  }
+
   function initUserActions() {
     form.name.addEventListener("blur", () => maybeSaveCurrentUser());
     form.email.addEventListener("blur", () => maybeSaveCurrentUser());
 
-    adminLoginToggle.addEventListener("click", () => {
-      adminLoginForm.classList.remove("hidden");
-    });
-
     adminLoginCancel.addEventListener("click", () => {
       adminLoginForm.reset();
-      adminLoginForm.classList.add("hidden");
+      window.location.search = "";
     });
 
     adminLoginForm.addEventListener("submit", (event) => {
@@ -129,8 +136,7 @@
     if (!isAdminMode) return;
 
     if (localStorage.getItem(ADMIN_AUTH_KEY) !== "1") {
-      window.history.replaceState({}, "", window.location.pathname);
-      setMessage("Faça login admin para acessar o painel.", true);
+      window.location.search = "?admin=login";
       return;
     }
 

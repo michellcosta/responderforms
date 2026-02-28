@@ -80,15 +80,25 @@ Nesse modo, todas as respostas de `fixedAnswers` aparecem para edição e ficam 
 
 ## Executar localmente
 
-Como é site estático, basta abrir `index.html` no navegador.
+Use um dos jeitos abaixo:
 
-Se preferir servidor local:
+### Opção 1 (recomendada): Node.js
+
+```bash
+npm start
+```
+
+Depois acesse: `http://localhost:4173`.
+
+### Opção 2: Python
 
 ```bash
 python3 -m http.server 4173
 ```
 
 Depois acesse: `http://localhost:4173`.
+
+> Se abrir `http://localhost:4173` sem iniciar um servidor antes, não vai funcionar.
 
 ## Observações
 

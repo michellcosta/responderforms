@@ -109,7 +109,7 @@
 
     saveAdminButton.addEventListener("click", () => {
       const values = {};
-      const inputs = adminFields.querySelectorAll("textarea[data-entry-id], select[data-entry-id]");
+      const inputs = adminFields.querySelectorAll("textarea[data-entry-id]");
       inputs.forEach((input) => {
         const entryId = input.getAttribute("data-entry-id");
         values[entryId] = input.value;
@@ -163,17 +163,16 @@
         if (options.length > 0) {
           const hasCurrent = options.includes(currentValue);
           const optionTags = [
-            ...(!hasCurrent && currentValue ? [`<option value="${escapeHtml(currentValue)}" selected>${escapeHtml(currentValue)} (atual)</option>`] : []),
-            ...options.map((option) => {
-              const selected = option === currentValue ? ' selected' : '';
-              return `<option value="${escapeHtml(option)}"${selected}>${escapeHtml(option)}</option>`;
-            }),
+            '<option value="">Respostas</option>',
+            ...(!hasCurrent && currentValue ? [`<option value="${escapeHtml(currentValue)}">${escapeHtml(currentValue)} (atual)</option>`] : []),
+            ...options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`),
           ].join('');
 
           return `
             <div class="admin-field">
               <label for="admin-${entryId}">${escapeHtml(label)} <small>(${entryId})</small></label>
-              <select id="admin-${entryId}" data-entry-id="${entryId}">${optionTags}</select>
+              <textarea id="admin-${entryId}" data-entry-id="${entryId}" rows="2">${escapeHtml(currentValue)}</textarea>
+              <select class="admin-option-picker" data-entry-option-for="${entryId}">${optionTags}</select>
             </div>
           `;
         }
@@ -186,6 +185,20 @@
         `;
       })
       .join('');
+
+    bindOptionPickers();
+  }
+
+  function bindOptionPickers() {
+    const pickers = adminFields.querySelectorAll('select.admin-option-picker[data-entry-option-for]');
+    pickers.forEach((picker) => {
+      picker.addEventListener('change', () => {
+        const entryId = picker.getAttribute('data-entry-option-for');
+        const target = adminFields.querySelector(`textarea[data-entry-id="${entryId}"]`);
+        if (!target || !picker.value) return;
+        target.value = picker.value;
+      });
+    });
   }
 
   async function loadSchemaAndRender() {

@@ -131,3 +131,7 @@ button:disabled {
 }
 
 .admin-field small { color: #6b7280; font-weight: 500; }
+
+.admin-option-picker {
+  margin-top: 0.45rem;
+}

@@ -115,8 +115,9 @@ npm run sync:schema
 
 ### Escolher valores exatamente como no Google Forms
 
-- Quando o `form-schema.json` contém `options`, o admin vê um `<select>` (lista) em vez de textarea.
-- Assim você escolhe o texto exato da opção do Forms e evita erro por diferença de escrita.
+- Quando o `form-schema.json` contém `options`, o admin vê **textarea + menu de respostas**.
+- O admin escolhe no menu e o texto é copiado automaticamente para o textarea do campo.
+- Assim você mantém edição manual quando quiser, mas com opção de selecionar exatamente o texto do Forms.
 - Para atualizar automaticamente quando o Forms mudar:
 
 ```bash

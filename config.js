@@ -10,6 +10,10 @@ window.FORM_CONFIG = {
 
   // Respostas fixas definidas pelo admin.
   // IMPORTANTE: para perguntas de múltipla escolha, use o texto EXATO de uma opção do Forms.
+  // URL CSV público da planilha de respostas do Forms (opcional para listar usuários no admin).
+  // Exemplo: "https://docs.google.com/spreadsheets/d/<SHEET_ID>/gviz/tq?tqx=out:csv&sheet=Respostas%20ao%20formul%C3%A1rio%201"
+  responsesCsvUrl: "",
+
   fixedAnswers: {
     // Cargo / Função *
     "entry.1530674274": "Dispatcher",

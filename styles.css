@@ -154,3 +154,41 @@ button:disabled {
   justify-content: center;
   text-decoration: none;
 }
+
+
+.admin-submissions {
+  margin-top: 1.2rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.admin-submissions h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+
+#submissions-status {
+  margin: 0 0 0.7rem;
+  color: #4b5563;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+#submissions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+#submissions-table th,
+#submissions-table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.45rem 0.5rem;
+  text-align: left;
+}
+
+#submissions-table th {
+  background: #f9fafb;
+}

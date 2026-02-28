@@ -3,6 +3,7 @@
   const ADMIN_STORAGE_KEY = "responderforms:adminFixedAnswers";
   const FORM_SCHEMA_KEY = "responderforms:formSchema";
   const ADMIN_AUTH_KEY = "responderforms:adminAuth";
+  const TEMA_ENTRY_ID = "entry.976109499";
 
   const form = document.getElementById("responder-form");
   const message = document.getElementById("message");
@@ -11,10 +12,11 @@
   const adminFields = document.getElementById("admin-fields");
   const saveAdminButton = document.getElementById("save-admin");
   const adminMessage = document.getElementById("admin-message");
-  const adminLoginToggle = document.getElementById("admin-login-toggle");
   const adminLoginForm = document.getElementById("admin-login-form");
   const adminLoginCancel = document.getElementById("admin-login-cancel");
   const logoutAdminButton = document.getElementById("logout-admin");
+  const submissionsStatus = document.getElementById("submissions-status");
+  const submissionsTableBody = document.querySelector("#submissions-table tbody");
 
   hydrateSavedUser();
   initUserActions();
@@ -70,14 +72,13 @@
     }
   });
 
-
   function initLoginMode() {
     const query = new URLSearchParams(window.location.search);
     const isAdminLoginMode = query.get("admin") === "login";
     if (!isAdminLoginMode) return;
 
     adminLoginForm.classList.remove("hidden");
-    adminLoginForm.querySelector('#admin-user').focus();
+    adminLoginForm.querySelector("#admin-user").focus();
   }
 
   function initUserActions() {
@@ -142,7 +143,12 @@
 
     adminPanel.classList.remove("hidden");
     userPanel.classList.add("hidden");
-    loadSchemaAndRender();
+
+    loadSchemaAndRender().then(() => {
+      applyTemaLastFiveOptions();
+      renderAdminFields();
+    });
+    loadSubmittedUsers();
 
     saveAdminButton.addEventListener("click", () => {
       const values = {};
@@ -161,6 +167,104 @@
       localStorage.removeItem(ADMIN_AUTH_KEY);
       window.location.search = "";
     });
+  }
+
+  function applyTemaLastFiveOptions() {
+    const schema = readJSON(FORM_SCHEMA_KEY);
+    if (!schema?.fields) return;
+
+    const tema = schema.fields.find((field) => field.entryId === TEMA_ENTRY_ID);
+    if (!tema || !Array.isArray(tema.options) || tema.options.length === 0) return;
+
+    const lastFive = tema.options.slice(-5);
+    tema.options = lastFive;
+    localStorage.setItem(FORM_SCHEMA_KEY, JSON.stringify(schema));
+  }
+
+  async function loadSubmittedUsers() {
+    const config = window.FORM_CONFIG || {};
+    const csvUrl = config.responsesCsvUrl;
+
+    if (!csvUrl) {
+      submissionsStatus.textContent =
+        "Defina responsesCsvUrl no config.js para listar usuários enviados.";
+      submissionsTableBody.innerHTML = "";
+      return;
+    }
+
+    try {
+      const response = await fetch(csvUrl, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const csvText = await response.text();
+      const rows = parseCsv(csvText);
+      if (!rows.length) {
+        submissionsStatus.textContent = "Nenhum envio encontrado.";
+        submissionsTableBody.innerHTML = "";
+        return;
+      }
+
+      const headers = rows[0].map((h) => h.trim().toLowerCase());
+      const nameIdx = headers.findIndex((h) => h.includes("nome"));
+      const emailIdx = headers.findIndex((h) => h.includes("mail"));
+      const dateIdx = headers.findIndex((h) => h.includes("carimbo") || h.includes("data"));
+
+      const dataRows = rows.slice(1).filter((r) => r.some((c) => c.trim()));
+      submissionsTableBody.innerHTML = dataRows
+        .map((r) => {
+          const name = escapeHtml(r[nameIdx] || "-");
+          const email = escapeHtml(r[emailIdx] || "-");
+          const date = escapeHtml(r[dateIdx] || "-");
+          return `<tr><td>${name}</td><td>${email}</td><td>${date}</td></tr>`;
+        })
+        .join("");
+
+      submissionsStatus.textContent = `${dataRows.length} envio(s) carregado(s).`;
+    } catch {
+      submissionsStatus.textContent =
+        "Não foi possível carregar a lista de usuários. Verifique responsesCsvUrl.";
+      submissionsTableBody.innerHTML = "";
+    }
+  }
+
+  function parseCsv(text) {
+    const rows = [];
+    let current = "";
+    let row = [];
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i += 1) {
+      const char = text[i];
+      const next = text[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && next === '"') {
+          current += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === "," && !inQuotes) {
+        row.push(current);
+        current = "";
+      } else if ((char === "\n" || char === "\r") && !inQuotes) {
+        if (char === "\r" && next === "\n") i += 1;
+        row.push(current);
+        rows.push(row);
+        row = [];
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+
+    if (current.length > 0 || row.length > 0) {
+      row.push(current);
+      rows.push(row);
+    }
+
+    return rows;
   }
 
   function setAdminMessage(text) {
@@ -280,7 +384,7 @@
   }
 
   function escapeHtml(value) {
-    return value
+    return String(value)
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")

@@ -87,6 +87,16 @@ Nesse modo, todas as respostas de `fixedAnswers` aparecem para edição e ficam 
 - No modo admin (`?admin=1`), a área de usuário (Nome/Email/Enviar/Trocar usuário) fica oculta.
 - Ao clicar em **Salvar respostas fixas**, aparece a confirmação `Respostas fixas do admin salvas com sucesso.` abaixo do botão.
 
+- Ao entrar no admin, o campo **Tema (`entry.976109499`)** usa automaticamente as 5 últimas opções do schema atual.
+- O admin pode ver a lista de usuários que enviaram o Forms se `responsesCsvUrl` estiver configurado com uma planilha pública CSV de respostas.
+
+### Lista de usuários que enviaram o Forms
+
+1. No Google Forms, vincule respostas a uma planilha.
+2. Publique/compartilhe a planilha de forma que o CSV fique acessível.
+3. Em `config.js`, preencha `responsesCsvUrl` com a URL CSV da aba de respostas.
+4. Ao entrar no admin, a tabela "Usuários que enviaram o formulário" será carregada.
+
 ### Ler estrutura do Forms automaticamente (labels dos campos)
 
 Este projeto agora mantém um `form-schema.json` com os campos do Google Forms.

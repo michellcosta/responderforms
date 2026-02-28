@@ -127,11 +127,3 @@ button:disabled {
 .hidden {
   display: none;
 }
-
-.hidden-iframe {
-  width: 0;
-  height: 0;
-  border: 0;
-  position: absolute;
-  left: -9999px;
-}

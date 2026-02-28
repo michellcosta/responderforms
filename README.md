@@ -78,6 +78,16 @@ Exemplo local:
 
 Nesse modo, todas as respostas de `fixedAnswers` aparecem para edição e ficam salvas no navegador do admin.
 
+## Publicar no GitHub Pages (recomendado)
+
+1. Suba este projeto para um repositório no GitHub.
+2. No GitHub, vá em **Settings → Pages** e selecione **GitHub Actions** como source.
+3. Faça push para a branch (`main`, `master` ou `work`) e aguarde o workflow `Deploy static site to GitHub Pages`.
+4. O site ficará disponível em uma URL como:
+   - `https://SEU-USUARIO.github.io/NOME-DO-REPO/`
+
+> Depois de publicado, você não precisa usar `localhost`.
+
 ## Executar localmente
 
 Use um dos jeitos abaixo:
@@ -109,6 +119,7 @@ Depois acesse: `http://localhost:4173`.
 
 ## Observações
 
+- A submissão usa `fetch` com `no-cors` para funcionar melhor em hospedagem estática (incluindo GitHub Pages).
 - Este modelo é ideal para facilitar o envio.
 - Não é uma barreira de segurança absoluta: quem conhecer os IDs ainda pode tentar enviar manualmente ao endpoint do Forms.
 - Para maior controle (anti-spam, validação forte, bloqueio de duplicidade), use backend intermediário.

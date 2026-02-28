@@ -12,7 +12,7 @@
   hydrateSavedUser();
   initAdminPanel();
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const config = window.FORM_CONFIG || {};
@@ -34,28 +34,31 @@
     setMessage("Enviando...", false);
     setSubmitting(true);
 
-    const payloadForm = document.createElement("form");
-    payloadForm.method = "POST";
-    payloadForm.action = `https://docs.google.com/forms/d/e/${config.formId}/formResponse`;
-    payloadForm.target = "google-form-target";
-    payloadForm.style.display = "none";
-
-    appendField(payloadForm, config.nameEntryId, name);
-    appendField(payloadForm, config.emailEntryId, email);
+    const payload = new URLSearchParams();
+    payload.append(config.nameEntryId, name);
+    payload.append(config.emailEntryId, email);
 
     const fixedAnswers = getMergedFixedAnswers(config.fixedAnswers || {});
     Object.entries(fixedAnswers).forEach(([entryId, value]) => {
-      appendField(payloadForm, entryId, String(value));
+      payload.append(entryId, String(value));
     });
 
-    document.body.appendChild(payloadForm);
-    payloadForm.submit();
+    try {
+      await fetch(`https://docs.google.com/forms/d/e/${config.formId}/formResponse`, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body: payload.toString(),
+      });
 
-    window.setTimeout(() => {
       setMessage("Enviado com sucesso.", false, true);
-      payloadForm.remove();
+    } catch {
+      setMessage("Falha no envio. Verifique internet e tente novamente.", true);
+    } finally {
       setSubmitting(false);
-    }, 900);
+    }
   });
 
   form.name.addEventListener("blur", () => maybeSaveCurrentUser());
@@ -102,7 +105,6 @@
     renderAdminFields();
 
     saveAdminButton.addEventListener("click", () => {
-      const config = window.FORM_CONFIG || {};
       const values = {};
       const inputs = adminFields.querySelectorAll("textarea[data-entry-id]");
       inputs.forEach((input) => {
@@ -112,7 +114,7 @@
 
       localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(values));
       setMessage("Respostas fixas do admin salvas com sucesso.", false, true);
-      renderAdminFields(config.fixedAnswers || {});
+      renderAdminFields();
     });
   }
 
@@ -139,14 +141,6 @@
         `
       )
       .join("");
-  }
-
-  function appendField(formEl, name, value) {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = name;
-    input.value = value;
-    formEl.appendChild(input);
   }
 
   function isValidConfig(config) {

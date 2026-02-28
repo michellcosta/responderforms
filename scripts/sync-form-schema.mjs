@@ -1,4 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import vm from 'node:vm';
 
 const CONFIG_PATH = new URL('../config.js', import.meta.url);
 const SCHEMA_PATH = new URL('../form-schema.json', import.meta.url);
@@ -8,16 +9,51 @@ function extractFormId(configText) {
   return match?.[1] ?? null;
 }
 
-function stripHtml(value) {
-  return value
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .trim();
+function mapType(typeCode) {
+  const map = {
+    0: 'short_text',
+    1: 'paragraph',
+    2: 'multiple_choice',
+    3: 'dropdown',
+    4: 'checkbox',
+  };
+  return map[typeCode] || 'unknown';
+}
+
+function parseLoadData(html) {
+  const match = html.match(/FB_PUBLIC_LOAD_DATA_\s*=\s*(\[.*?\]);\s*<\/script>/s);
+  if (!match) {
+    throw new Error('FB_PUBLIC_LOAD_DATA_ não encontrado no HTML do Forms.');
+  }
+
+  const payload = vm.runInNewContext(match[1]);
+  const questions = payload?.[1]?.[1];
+  if (!Array.isArray(questions)) {
+    throw new Error('Estrutura de questões não encontrada em FB_PUBLIC_LOAD_DATA_.');
+  }
+
+  return questions
+    .map((question) => {
+      const label = question?.[1] || '';
+      const typeCode = question?.[3];
+      const answerBlock = question?.[4]?.[0];
+      const entryId = answerBlock?.[0] ? `entry.${answerBlock[0]}` : null;
+      const optionsRaw = answerBlock?.[1];
+
+      if (!entryId) return null;
+
+      const options = Array.isArray(optionsRaw)
+        ? optionsRaw.map((item) => item?.[0]).filter(Boolean)
+        : [];
+
+      return {
+        entryId,
+        label,
+        type: mapType(typeCode),
+        options,
+      };
+    })
+    .filter(Boolean);
 }
 
 async function main() {
@@ -40,16 +76,7 @@ async function main() {
   }
 
   const html = await response.text();
-
-  const entryMatches = [...html.matchAll(/name="(entry\.\d+)"/g)].map((m) => m[1]);
-  const uniqueEntryIds = [...new Set(entryMatches)];
-
-  const headingMatches = [...html.matchAll(/<div[^>]*role="heading"[^>]*>([\s\S]*?)<\/div>/g)].map((m) => stripHtml(m[1]));
-
-  const fields = uniqueEntryIds.map((entryId, index) => ({
-    entryId,
-    label: headingMatches[index] || entryId,
-  }));
+  const fields = parseLoadData(html);
 
   const schema = {
     generatedAt: new Date().toISOString(),

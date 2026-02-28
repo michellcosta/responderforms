@@ -3,14 +3,65 @@
   "formId": "1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ",
   "sourceUrl": "https://docs.google.com/forms/d/e/1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ/viewform",
   "fields": [
-    { "entryId": "entry.859537025", "label": "E-mail *" },
-    { "entryId": "entry.305174092", "label": "Nome Completo *" },
-    { "entryId": "entry.987323929", "label": "Cargo / Função *" },
-    { "entryId": "entry.1605377415", "label": "Empresa *" },
-    { "entryId": "entry.1530674274", "label": "Tema *" },
-    { "entryId": "entry.170197194", "label": "Qual sua opinião sobre o tema?" },
-    { "entryId": "entry.976109499", "label": "Operação *" },
-    { "entryId": "entry.2004173578", "label": "Site (Localidade) *" },
-    { "entryId": "entry.2067716336", "label": "Se você respondeu OUTROS na pergunta acima, especifique a localidade:" }
+    {
+      "entryId": "entry.859537025",
+      "label": "E-mail *",
+      "type": "short_text",
+      "options": []
+    },
+    {
+      "entryId": "entry.305174092",
+      "label": "Nome Completo *",
+      "type": "short_text",
+      "options": []
+    },
+    {
+      "entryId": "entry.987323929",
+      "label": "Cargo / Função *",
+      "type": "short_text",
+      "options": []
+    },
+    {
+      "entryId": "entry.1605377415",
+      "label": "Empresa *",
+      "type": "short_text",
+      "options": []
+    },
+    {
+      "entryId": "entry.1530674274",
+      "label": "Tema *",
+      "type": "dropdown",
+      "options": [
+        "Dispatcher",
+        "Motorista",
+        "Ajudante",
+        "Gestor da Frota",
+        "ADM Transportes"
+      ]
+    },
+    {
+      "entryId": "entry.170197194",
+      "label": "Qual sua opinião sobre o tema?",
+      "type": "short_text",
+      "options": []
+    },
+    {
+      "entryId": "entry.976109499",
+      "label": "Operação *",
+      "type": "short_text",
+      "options": []
+    },
+    {
+      "entryId": "entry.2004173578",
+      "label": "Site (Localidade) *",
+      "type": "short_text",
+      "options": []
+    },
+    {
+      "entryId": "entry.2067716336",
+      "label": "Se você respondeu OUTROS na pergunta acima, especifique a localidade:",
+      "type": "short_text",
+      "options": []
+    }
   ]
 }

@@ -109,7 +109,7 @@
 
     saveAdminButton.addEventListener("click", () => {
       const values = {};
-      const inputs = adminFields.querySelectorAll("textarea[data-entry-id]");
+      const inputs = adminFields.querySelectorAll("textarea[data-entry-id], select[data-entry-id]");
       inputs.forEach((input) => {
         const entryId = input.getAttribute("data-entry-id");
         values[entryId] = input.value;
@@ -144,7 +144,7 @@
     const config = window.FORM_CONFIG || {};
     const merged = getMergedFixedAnswers(config.fixedAnswers || {});
     const schema = readJSON(FORM_SCHEMA_KEY);
-    const labelMap = new Map((schema?.fields || []).map((field) => [field.entryId, field.label]));
+    const schemaMap = new Map((schema?.fields || []).map((field) => [field.entryId, field]));
 
     const entries = Object.entries(merged);
     if (!entries.length) {
@@ -155,17 +155,37 @@
 
     adminFields.innerHTML = entries
       .map(([entryId, value]) => {
-        const label = labelMap.get(entryId) || entryId;
+        const schemaField = schemaMap.get(entryId);
+        const label = schemaField?.label || entryId;
+        const options = schemaField?.options || [];
+        const currentValue = String(value ?? '');
+
+        if (options.length > 0) {
+          const hasCurrent = options.includes(currentValue);
+          const optionTags = [
+            ...(!hasCurrent && currentValue ? [`<option value="${escapeHtml(currentValue)}" selected>${escapeHtml(currentValue)} (atual)</option>`] : []),
+            ...options.map((option) => {
+              const selected = option === currentValue ? ' selected' : '';
+              return `<option value="${escapeHtml(option)}"${selected}>${escapeHtml(option)}</option>`;
+            }),
+          ].join('');
+
+          return `
+            <div class="admin-field">
+              <label for="admin-${entryId}">${escapeHtml(label)} <small>(${entryId})</small></label>
+              <select id="admin-${entryId}" data-entry-id="${entryId}">${optionTags}</select>
+            </div>
+          `;
+        }
+
         return `
           <div class="admin-field">
             <label for="admin-${entryId}">${escapeHtml(label)} <small>(${entryId})</small></label>
-            <textarea id="admin-${entryId}" data-entry-id="${entryId}" rows="2">${escapeHtml(
-          String(value)
-        )}</textarea>
+            <textarea id="admin-${entryId}" data-entry-id="${entryId}" rows="2">${escapeHtml(currentValue)}</textarea>
           </div>
         `;
       })
-      .join("");
+      .join('');
   }
 
   async function loadSchemaAndRender() {

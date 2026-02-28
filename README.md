@@ -95,6 +95,8 @@ No seu site:
 
 Pronto: o sistema extrai automaticamente todos os `entry.*` do link e preenche as respostas fixas (exceto nome e email).
 
+Quando existir `form-schema.json` com opções do Forms, o painel admin mostra **listas de seleção** com o texto exato que o Google Forms espera.
+
 ### Ler estrutura do Forms automaticamente (labels dos campos)
 
 Este projeto agora mantém um `form-schema.json` com os campos do Google Forms.
@@ -110,6 +112,18 @@ npm run sync:schema
   - workflow `Sync Google Form schema` roda a cada 6 horas e atualiza `form-schema.json`.
 
 > Se o Google bloquear acesso no seu ambiente local, rode apenas no GitHub Actions (lá costuma funcionar melhor).
+
+### Escolher valores exatamente como no Google Forms
+
+- Quando o `form-schema.json` contém `options`, o admin vê um `<select>` (lista) em vez de textarea.
+- Assim você escolhe o texto exato da opção do Forms e evita erro por diferença de escrita.
+- Para atualizar automaticamente quando o Forms mudar:
+
+```bash
+npm run sync:schema
+```
+
+ou rode o workflow **Sync Google Form schema** no GitHub Actions.
 
 ## Publicar no GitHub Pages (recomendado)
 

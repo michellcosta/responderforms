@@ -4,6 +4,7 @@
   const FORM_SCHEMA_KEY = "responderforms:formSchema";
   const ADMIN_AUTH_KEY = "responderforms:adminAuth";
   const SUBMISSIONS_KEY = "responderforms:submissions";
+  const SUBMISSIONS_DAY_KEY = "responderforms:submissionsDay";
   const TEMA_ENTRY_ID = "entry.976109499";
 
   const form = document.getElementById("responder-form");
@@ -20,6 +21,8 @@
   const submissionsTableBody = document.querySelector("#submissions-table tbody");
 
   hydrateSavedUser();
+  resetDailySubmissionsIfNeeded();
+  scheduleMidnightReset();
   initUserActions();
   initLoginMode();
   initAdminPanel();
@@ -187,7 +190,7 @@
     const config = window.FORM_CONFIG || {};
     const csvUrl = config.responsesCsvUrl;
 
-    const localSubmissions = readJSON(SUBMISSIONS_KEY) || [];
+    const localSubmissions = getTodayLocalSubmissions();
     let remoteSubmissions = [];
 
     if (csvUrl) {
@@ -251,9 +254,48 @@
   }
 
   function appendLocalSubmission(item) {
-    const current = readJSON(SUBMISSIONS_KEY) || [];
+    const current = getTodayLocalSubmissions();
     current.unshift(item);
     localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(current.slice(0, 500)));
+    localStorage.setItem(SUBMISSIONS_DAY_KEY, getLocalDateKey());
+  }
+
+  function getTodayLocalSubmissions() {
+    resetDailySubmissionsIfNeeded();
+    return readJSON(SUBMISSIONS_KEY) || [];
+  }
+
+  function resetDailySubmissionsIfNeeded() {
+    const todayKey = getLocalDateKey();
+    const savedDay = localStorage.getItem(SUBMISSIONS_DAY_KEY);
+
+    if (savedDay !== todayKey) {
+      localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify([]));
+      localStorage.setItem(SUBMISSIONS_DAY_KEY, todayKey);
+    }
+  }
+
+  function scheduleMidnightReset() {
+    const now = new Date();
+    const nextMidnight = new Date(now);
+    nextMidnight.setHours(24, 0, 0, 0);
+    const delay = nextMidnight.getTime() - now.getTime();
+
+    window.setTimeout(() => {
+      resetDailySubmissionsIfNeeded();
+      if (!adminPanel.classList.contains("hidden")) {
+        loadSubmittedUsers();
+      }
+      scheduleMidnightReset();
+    }, Math.max(1, delay));
+  }
+
+  function getLocalDateKey() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
   }
 
   function formatDate(isoDate) {

@@ -96,7 +96,8 @@ Nesse modo, todas as respostas de `fixedAnswers` aparecem para edição e ficam 
 2. Publique/compartilhe a planilha de forma que o CSV fique acessível.
 3. Em `config.js`, preencha `responsesCsvUrl` com a URL CSV da aba de respostas (opcional).
 4. Mesmo sem CSV, os envios feitos neste navegador entram na lista local automaticamente.
-5. Ao entrar no admin, a tabela "Usuários que enviaram o formulário" será carregada.
+5. A lista local é diária: zera automaticamente às 00:00 (hora local do navegador).
+6. Ao entrar no admin, a tabela "Usuários que enviaram o formulário" será carregada.
 
 ### Ler estrutura do Forms automaticamente (labels dos campos)
 

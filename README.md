@@ -98,6 +98,13 @@ python3 -m http.server 4173
 
 Depois acesse: `http://localhost:4173`.
 
+
+### Opção 3: Windows (duplo clique)
+
+- Clique duas vezes no arquivo `start.bat`.
+- O servidor vai iniciar e mostrar `http://localhost:4173` no terminal.
+- Abra esse endereço no navegador.
+
 > Se abrir `http://localhost:4173` sem iniciar um servidor antes, não vai funcionar.
 
 ## Observações

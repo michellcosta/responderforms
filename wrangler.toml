@@ -5,4 +5,4 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "responderforms-db"
-database_id = "bffcc71c4d31a34c3d66b35b308e5ecdfc017"
+database_id = "c5dc37f9-24e2-4bcd-b372-c01679acd269"

@@ -515,7 +515,9 @@ const ADMIN_PASS      = 'forms2026';
 const FORMS_ACTION    = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ/formResponse';
 const FORMS_VIEW      = 'https://docs.google.com/forms/d/e/1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ/viewform';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHhfvmHvhmmIS2b7yj2D7i_F8N6UaqNQInun4wMhLlKrSjqQNgwmftyVYeItyO6YM1/exec';
-const API_TEMAS = '/api/temas'; // Servidor local (npm run dev)
+const API_TEMAS = '/api/temas';
+const API_SESSION = '/api/session';
+const API_SUBMISSIONS = '/api/submissions';
 
 // IDs dos campos do Forms real — Briefing Safety OTR
 const F = {
@@ -535,7 +537,7 @@ const TEMA_ENTRY_ID = 976109499;
 
 // ══ STATE ══
 let sessionData = {};
-let submissions = JSON.parse(localStorage.getItem('bs_subs') || '[]');
+let submissions = [];
 
 // ══ TELAS ══
 function show(id) {
@@ -545,31 +547,39 @@ function show(id) {
 }
 
 // ══ MOTORISTA — entra direto com sessão salva pelo admin ══
-function entrarMotorista() {
-  const raw = localStorage.getItem('bs_sessao_ativa');
+async function entrarMotorista() {
   const info = document.getElementById('sessionInfo');
+  info.innerHTML = '<div class="session-info"><div class="si-title">Carregando...</div></div>';
+  show('userScreen');
 
-  if (!raw) {
-    info.innerHTML = `<div class="no-session">
-      ⚠️ <strong>Nenhuma sessão ativa.</strong><br>
-      O admin ainda não configurou o briefing de hoje.<br>
-      <span style="color:#6b7280;font-size:0.78rem;">Aguarde o admin salvar a sessão e tente novamente.</span>
-    </div>`;
-    document.getElementById('submitBtn').disabled = true;
-  } else {
-    const d = JSON.parse(raw);
-    sessionData = d;
-    const labels = { cargo:'Cargo', empresa:'Empresa', tema:'Tema', op:'Operação', site:'Localidade' };
-    let rows = '<div class="si-title">Dados da sessão de hoje</div>';
-    for (const [k,v] of Object.entries(d)) {
-      if (k === 'at') continue;
-      rows += `<div class="si-row"><span class="k">${labels[k]||k}</span><span class="v">${v}</span></div>`;
+  try {
+    const r = await fetch(API_SESSION);
+    const j = await r.json();
+    const d = j.session;
+
+    if (!d || !d.cargo) {
+      info.innerHTML = `<div class="no-session">
+        ⚠️ <strong>Nenhuma sessão ativa.</strong><br>
+        O admin ainda não configurou o briefing de hoje.<br>
+        <span style="color:#6b7280;font-size:0.78rem;">Aguarde o admin salvar a sessão e tente novamente.</span>
+      </div>`;
+      document.getElementById('submitBtn').disabled = true;
+    } else {
+      sessionData = d;
+      const labels = { cargo:'Cargo', empresa:'Empresa', tema:'Tema', op:'Operação', site:'Localidade' };
+      let rows = '<div class="si-title">Dados da sessão de hoje</div>';
+      for (const [k,v] of Object.entries(d)) {
+        if (k === 'at' || !v) continue;
+        rows += `<div class="si-row"><span class="k">${labels[k]||k}</span><span class="v">${v}</span></div>`;
+      }
+      info.innerHTML = `<div class="session-info">${rows}</div>`;
+      document.getElementById('submitBtn').disabled = false;
     }
-    info.innerHTML = `<div class="session-info">${rows}</div>`;
-    document.getElementById('submitBtn').disabled = false;
+  } catch (e) {
+    info.innerHTML = `<div class="no-session">⚠️ Erro ao carregar sessão. Tente novamente.</div>`;
+    document.getElementById('submitBtn').disabled = true;
   }
 
-  // Carregar nome/email salvos
   const saved = JSON.parse(localStorage.getItem('bs_user') || 'null');
   if (saved && saved.nome && saved.email) {
     document.getElementById('u_nome').value  = saved.nome;
@@ -578,15 +588,13 @@ function entrarMotorista() {
     document.getElementById('emailChip').style.display = '';
     document.getElementById('helloName').textContent   = saved.nome.split(' ')[0];
     document.getElementById('confirmBanner').style.display = 'block';
-    document.getElementById('submitBtn').textContent   = raw ? '✓ Confirmar Participação' : 'Aguardando sessão...';
+    document.getElementById('submitBtn').textContent   = sessionData.cargo ? '✓ Confirmar Participação' : 'Aguardando sessão...';
   } else {
     document.getElementById('nomeChip').style.display  = 'none';
     document.getElementById('emailChip').style.display = 'none';
     document.getElementById('confirmBanner').style.display = 'none';
     document.getElementById('submitBtn').textContent = 'Confirmar Participação →';
   }
-
-  show('userScreen');
 }
 
 // ══ LOGIN ══
@@ -613,26 +621,30 @@ function doLogout() {
 }
 
 // ══ CARREGAR CAMPOS ADMIN ══
-function loadAdminFields() {
-  const raw = localStorage.getItem('bs_session');
-  const d   = raw ? JSON.parse(raw) : {};
-  if (d.cargo)   document.getElementById('a_cargo').value   = d.cargo;
-  if (d.empresa) document.getElementById('a_empresa').value = d.empresa;
-  if (d.op)      document.getElementById('a_op').value      = d.op;
-  if (d.site)    document.getElementById('a_site').value    = d.site;
+async function loadAdminFields() {
+  let d = {};
+  try {
+    const r = await fetch(API_SESSION);
+    const j = await r.json();
+    d = j.session || {};
+    if (d.cargo)   document.getElementById('a_cargo').value   = d.cargo;
+    if (d.empresa) document.getElementById('a_empresa').value = d.empresa;
+    if (d.op)      document.getElementById('a_op').value      = d.op;
+    if (d.site)    document.getElementById('a_site').value    = d.site;
 
-  if (raw) {
-    const date = d.at ? new Date(d.at).toLocaleDateString('pt-BR') : '';
-    const b = document.getElementById('adminBanner');
-    b.style.display = 'block';
-    b.innerHTML = `✅ <strong>Última sessão carregada${date ? ' ('+date+')' : ''}.</strong><br>
-      <span style="color:#9ca3af">Tema anterior: <strong style="color:#fb923c">${d.tema||'—'}</strong></span>`;
-  }
+    if (d.cargo) {
+      const date = d.at ? new Date(d.at).toLocaleDateString('pt-BR') : '';
+      const b = document.getElementById('adminBanner');
+      b.style.display = 'block';
+      b.innerHTML = `✅ <strong>Última sessão carregada${date ? ' ('+date+')' : ''}.</strong><br>
+        <span style="color:#9ca3af">Tema anterior: <strong style="color:#fb923c">${d.tema||'—'}</strong></span>`;
+    }
+  } catch (e) {}
   carregarTemas(d.tema || '', false);
 }
 
 // ══ SALVAR SESSÃO ══
-function salvarSessao() {
+async function salvarSessao() {
   const cargo   = document.getElementById('a_cargo').value;
   const empresa = document.getElementById('a_empresa').value;
   const tema    = document.getElementById('a_tema').value;
@@ -644,11 +656,18 @@ function salvarSessao() {
     return;
   }
 
-  const d = { cargo, empresa, tema, op, site, at: new Date().toISOString() };
-
-  // Salva tanto a sessão do admin quanto a sessão ativa para motoristas
-  localStorage.setItem('bs_session', JSON.stringify(d));
-  localStorage.setItem('bs_sessao_ativa', JSON.stringify(d));
+  try {
+    const r = await fetch(API_SESSION, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cargo, empresa, tema, op, site })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Erro ao salvar');
+  } catch (e) {
+    alert('Erro ao salvar: ' + e.message);
+    return;
+  }
 
   const b = document.getElementById('adminBanner');
   b.style.display = 'block';
@@ -755,10 +774,17 @@ function atualizarTemas() {
 }
 
 // ══ SUBMISSÕES ══
-function renderSubs() {
+async function renderSubs() {
   const el = document.getElementById('subList');
+  el.innerHTML = '<div class="empty">Carregando...</div>';
+  try {
+    const r = await fetch(API_SUBMISSIONS);
+    const j = await r.json();
+    submissions = j.submissions || [];
+  } catch (e) {
+    submissions = [];
+  }
   if (!submissions.length) { el.innerHTML = '<div class="empty">Nenhum envio ainda.</div>'; return; }
-  // Ordem cronológica: primeiro enviado no topo, último embaixo
   el.innerHTML = submissions.map((s, i) =>
     `<div class="sub-item">
       <div class="sub-num">${i + 1}</div>
@@ -768,7 +794,6 @@ function renderSubs() {
       <div class="sub-time">${s.time}</div>
     </div>`
   ).join('');
-  // Scroll para o último
   el.lastElementChild && el.lastElementChild.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
@@ -801,11 +826,16 @@ async function submitForm() {
 
   try { await fetch(FORMS_ACTION, { method:'POST', mode:'no-cors', body:fd }); } catch(e) {}
 
-  const now  = new Date();
-  const time = now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
-             + ' · ' + now.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-  submissions.push({ nome, email, time });
-  localStorage.setItem('bs_subs', JSON.stringify(submissions));
+  try {
+    const r = await fetch(API_SUBMISSIONS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, email })
+    });
+    if (!r.ok) throw new Error('Erro ao salvar');
+  } catch (e) {
+    console.warn('API submissions falhou:', e);
+  }
 
   document.getElementById('whoSent').innerHTML = `Enviado por: <strong>${nome}</strong> &lt;${email}&gt;`;
   show('successScreen');
@@ -822,7 +852,7 @@ async function submitForm() {
   if (localStorage.getItem('bs_admin') === '1') {
     show('adminScreen');
     loadAdminFields();
-    renderSubs();
+    renderSubs(); // async - carrega do D1
   }
 })();
 </script>

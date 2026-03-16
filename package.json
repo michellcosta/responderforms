@@ -4,6 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "db:create": "wrangler d1 create responderforms-db",
+    "db:migrate": "wrangler d1 execute responderforms-db --file=./schema.sql --remote",
+    "pages:deploy": "wrangler pages deploy . --project-name=responderforms"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
   }
 }

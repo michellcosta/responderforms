@@ -1,24 +1,31 @@
 # Deploy no Cloudflare Pages + D1
 
-## 1. Criar o banco D1
+## 1. Deploy inicial (sem D1)
 
-```bash
-npx wrangler d1 create responderforms-db
-```
+O deploy deve funcionar. O `/api/temas` funciona sem banco. Para session e submissions, configure o D1 abaixo.
 
-Copie o `database_id` da saída.
+## 2. Criar o banco D1 (no dashboard)
 
-## 2. Atualizar wrangler.toml
+1. Acesse [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **D1**
+2. **Create database** → Nome: `responderforms-db`
+3. **Create**
 
-Edite `wrangler.toml` e substitua `REPLACE_WITH_YOUR_D1_DATABASE_ID` pelo ID copiado.
+## 3. Vincular D1 ao projeto Pages
 
-## 3. Executar o schema
+1. **Workers & Pages** → **responderforms** (seu projeto)
+2. **Settings** → **Functions** → **D1 database bindings**
+3. **Add binding** → Variable name: `DB` → D1 database: `responderforms-db`
+4. **Save**
+
+## 4. Executar o schema
+
+No terminal (com `wrangler login` feito):
 
 ```bash
 npx wrangler d1 execute responderforms-db --file=./schema.sql --remote
 ```
 
-## 4. Deploy no Cloudflare
+## 5. Deploy no Cloudflare
 
 ### Opção A: Via Git (recomendado)
 

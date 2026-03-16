@@ -2,5 +2,7 @@ name = "responderforms"
 compatibility_date = "2024-01-01"
 pages_build_output_dir = "."
 
-# D1: crie em dash.cloudflare.com > Workers & Pages > D1 > Create
-# Depois: Settings > Functions > D1 database bindings > DB → responderforms-db
+[[d1_databases]]
+binding = "DB"
+database_name = "responderforms-db"
+database_id = "bffcc71c4d31a34c3d66b35b308e5ecdfc017"

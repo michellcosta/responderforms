@@ -85,8 +85,8 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Arquivos estáticos
-  let filePath = req.url === '/' ? 'index (8).html' : req.url.replace(/^\//, '').replace(/\?.*$/, '');
-  if (filePath === 'index' || filePath === '') filePath = 'index (8).html';
+  let filePath = req.url === '/' ? 'index.html' : req.url.replace(/^\//, '').replace(/\?.*$/, '');
+  if (filePath === 'index' || filePath === '') filePath = 'index.html';
   filePath = path.resolve(__dirname, filePath);
   if (path.relative(__dirname, filePath).startsWith('..')) {
     res.writeHead(403);

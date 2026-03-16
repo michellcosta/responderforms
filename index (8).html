@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Briefing Safety</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10; --surface: #12151c; --surface2: #1a1f2a;
+    --border: #252b38; --accent: #f97316; --accent2: #fb923c;
+    --text: #e8eaf0; --muted: #6b7280; --success: #22c55e; --danger: #ef4444;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+  .glow { position:fixed; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(249,115,22,0.07) 0%,transparent 70%); pointer-events:none; top:-150px; right:-150px; z-index:0; }
+
+  .screen { display:none; position:relative; z-index:1; }
+  .screen.active { display:flex; }
+
+  /* ── SHARED ── */
+  .logo-mark {
+    background:linear-gradient(135deg,var(--accent),#ea580c);
+    border-radius:14px; display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; color:#fff; flex-shrink:0;
+    box-shadow:0 0 30px rgba(249,115,22,0.25);
+  }
+  .logo-mark.big { width:72px; height:72px; font-size:1.6rem; border-radius:20px; margin:0 auto 2rem; animation:pulse 3s ease-in-out infinite; display:none; }
+  .logo-mark.sm  { width:38px; height:38px; font-size:0.85rem; border-radius:11px; }
+
+  @keyframes pulse { 0%,100%{box-shadow:0 0 30px rgba(249,115,22,0.25)} 50%{box-shadow:0 0 55px rgba(249,115,22,0.45)} }
+  @keyframes up    { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pop   { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+  @keyframes spin  { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:2.5rem; width:100%; max-width:460px; animation:up .45s ease; }
+
+  .field { margin-bottom:1.1rem; }
+  label  { display:block; font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.09em; margin-bottom:0.45rem; }
+
+  input[type=text],input[type=email],input[type=password],select {
+    width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px;
+    padding:0.8rem 1rem; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.93rem;
+    outline:none; appearance:none; transition:border-color .2s,box-shadow .2s;
+  }
+  input:focus,select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(249,115,22,0.14); }
+  select option { background:var(--surface2); }
+  .sel { position:relative; }
+  .sel::after { content:'▾'; position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+
+  .btn {
+    width:100%; padding:0.9rem; border:none; border-radius:12px;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:0.95rem;
+    cursor:pointer; letter-spacing:0.02em; transition:transform .15s,box-shadow .15s;
+  }
+  .btn.primary { background:linear-gradient(135deg,var(--accent),#ea580c); color:#fff; }
+  .btn.primary:hover { transform:translateY(-1px); box-shadow:0 8px 28px rgba(249,115,22,0.28); }
+  .btn.outline { background:transparent; border:1px solid var(--border); color:var(--text); margin-top:0.7rem; }
+  .btn.outline:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.green { background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; }
+  .btn.green:hover { transform:translateY(-1px); box-shadow:0 8px 28px rgba(22,163,74,0.28); }
+  .btn:active { transform:none !important; }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  .err { color:var(--danger); font-size:0.8rem; text-align:center; margin-top:0.7rem; opacity:0; transition:opacity .2s; }
+  .err.show { opacity:1; }
+
+  /* ── HOME ── */
+  #homeScreen { min-height:100vh; flex-direction:column; align-items:center; justify-content:center; padding:2rem; gap:0; }
+
+  .home-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:24px; padding:2.5rem 2rem;
+    width:100%; max-width:380px;
+    animation:up .5s ease;
+    box-shadow:0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .home-icon {
+    width:56px; height:56px;
+    background:linear-gradient(135deg,var(--accent),#ea580c);
+    border-radius:16px; display:flex; align-items:center; justify-content:center;
+    font-size:1.4rem; margin:0 auto 1.5rem;
+    box-shadow:0 0 30px rgba(249,115,22,0.3);
+  }
+
+  .home-title { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; text-align:center; margin-bottom:0.3rem; }
+  .home-sub   { text-align:center; color:var(--muted); font-size:0.87rem; margin-bottom:2rem; }
+
+  .home-divider {
+    display:flex; align-items:center; gap:0.8rem;
+    margin-bottom:1.2rem;
+  }
+  .home-divider span { font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; white-space:nowrap; }
+  .home-divider::before, .home-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .btn-role {
+    display:flex; align-items:center; gap:1rem;
+    padding:1rem 1.2rem; border-radius:14px; cursor:pointer;
+    border:1px solid var(--border);
+    transition:all .2s; text-align:left; width:100%;
+    font-family:'DM Sans',sans-serif; margin-bottom:0.75rem;
+  }
+
+  /* Motorista — fundo verde escuro com borda verde */
+  .btn-role.motorista {
+    background:rgba(34,197,94,0.08);
+    border-color:rgba(34,197,94,0.25);
+  }
+  .btn-role.motorista:hover {
+    background:rgba(34,197,94,0.15);
+    border-color:rgba(34,197,94,0.5);
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(34,197,94,0.15);
+  }
+
+  /* Admin — fundo laranja escuro com borda laranja */
+  .btn-role.admin {
+    background:rgba(249,115,22,0.08);
+    border-color:rgba(249,115,22,0.25);
+    margin-bottom:0;
+  }
+  .btn-role.admin:hover {
+    background:rgba(249,115,22,0.15);
+    border-color:rgba(249,115,22,0.5);
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(249,115,22,0.15);
+  }
+
+  .btn-role-icon {
+    width:42px; height:42px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; flex-shrink:0;
+  }
+  .btn-role-icon.green  { background:rgba(34,197,94,0.15); }
+  .btn-role-icon.orange { background:rgba(249,115,22,0.15); }
+
+  .btn-role-text strong {
+    display:block; font-weight:700; font-size:0.97rem; margin-bottom:0.1rem;
+  }
+  .btn-role.motorista .btn-role-text strong { color:#4ade80; }
+  .btn-role.admin     .btn-role-text strong { color:#fb923c; }
+  .btn-role-text span { font-size:0.78rem; color:var(--muted); }
+
+  /* ── ADMIN LOGIN ── */
+  #adminLoginScreen { min-height:100vh; flex-direction:column; align-items:center; justify-content:center; padding:2rem; }
+  #adminLoginScreen h1 { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; text-align:center; margin-bottom:0.3rem; }
+  #adminLoginScreen .sub { text-align:center; color:var(--muted); font-size:0.87rem; margin-bottom:2rem; }
+
+  /* ── ADMIN PAINEL ── */
+  #adminScreen { min-height:100vh; flex-direction:column; padding:1.5rem; }
+
+  .topbar { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:0.9rem 1.3rem; margin-bottom:2rem; }
+  .topbar-l { display:flex; align-items:center; gap:0.75rem; }
+  .topbar h2 { font-family:'Syne',sans-serif; font-size:0.97rem; font-weight:700; }
+  .badge { background:rgba(249,115,22,.13); color:var(--accent); font-size:0.68rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:20px; border:1px solid rgba(249,115,22,.25); text-transform:uppercase; letter-spacing:0.08em; }
+  .btn-sm { background:none; border:1px solid var(--border); color:var(--muted); padding:0.4rem 0.9rem; border-radius:8px; cursor:pointer; font-size:0.8rem; font-family:'DM Sans',sans-serif; transition:all .2s; }
+  .btn-sm:hover { border-color:var(--danger); color:var(--danger); }
+
+  .admin-body { max-width:580px; margin:0 auto; width:100%; }
+  .page-title { font-family:'Syne',sans-serif; font-size:1.25rem; font-weight:800; margin-bottom:0.3rem; }
+  .page-desc  { color:var(--muted); font-size:0.86rem; line-height:1.6; margin-bottom:1.5rem; }
+
+  .banner { border-radius:10px; padding:0.85rem 1.1rem; font-size:0.83rem; line-height:1.6; margin-bottom:1.2rem; animation:up .3s ease; }
+  .banner.green  { background:rgba(34,197,94,.07);  border:1px solid rgba(34,197,94,.22);  color:#86efac; }
+  .banner.orange { background:rgba(249,115,22,.07); border:1px solid rgba(249,115,22,.2);  color:var(--accent2); }
+
+  .fcard { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.8rem; margin-bottom:1.3rem; }
+  .fcard-title { font-family:'Syne',sans-serif; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:1.3rem; padding-bottom:0.75rem; border-bottom:1px solid var(--border); }
+
+  .tema-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.45rem; }
+  .tema-row label { margin:0; }
+  .btn-refresh { background:none; border:1px solid var(--border); color:var(--muted); padding:0.2rem 0.65rem; border-radius:6px; cursor:pointer; font-size:0.72rem; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:0.3rem; transition:all .2s; }
+  .btn-refresh:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-refresh:disabled { opacity:0.4; cursor:not-allowed; }
+  .r-icon { display:inline-block; font-size:0.9rem; line-height:1; }
+  .r-icon.spin { animation:spin 1s linear infinite; }
+
+  hr { border:none; border-top:1px solid var(--border); margin:1.5rem 0; }
+
+  .sub-section h3 { font-family:'Syne',sans-serif; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:0.9rem; }
+  .sub-list { display:flex; flex-direction:column; gap:0.5rem; }
+  .sub-item { display:flex; justify-content:space-between; align-items:center; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.65rem 0.9rem; font-size:0.84rem; animation:up .3s ease; gap:0.8rem; }
+  .sub-num  { font-family:'Syne',sans-serif; font-weight:800; font-size:1rem; color:var(--accent); min-width:24px; text-align:center; }
+  .sub-name  { font-weight:500; }
+  .sub-email { color:var(--muted); font-size:0.78rem; }
+  .sub-time  { color:var(--muted); font-size:0.73rem; text-align:right; }
+  .empty { text-align:center; padding:1.8rem; color:var(--muted); font-size:0.85rem; border:1px dashed var(--border); border-radius:12px; }
+
+  /* ── USER ── */
+  #userScreen { min-height:100vh; flex-direction:column; align-items:center; justify-content:center; padding:1.5rem; }
+
+  .user-header { display:flex; align-items:center; gap:0.75rem; margin-bottom:1.5rem; padding-bottom:1.2rem; border-bottom:1px solid var(--border); }
+  .user-header-text h2 { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; }
+  .user-header-text p  { font-size:0.82rem; color:var(--muted); }
+
+  .session-info { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:0.9rem 1.1rem; margin-bottom:1.3rem; }
+  .si-title { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.09em; color:var(--muted); font-weight:600; margin-bottom:0.7rem; }
+  .si-row { display:flex; justify-content:space-between; padding:0.35rem 0; font-size:0.83rem; border-bottom:1px solid var(--border); }
+  .si-row:last-child { border-bottom:none; }
+  .si-row .k { color:var(--muted); }
+  .si-row .v { color:var(--accent2); font-weight:500; text-align:right; max-width:60%; }
+
+  .no-session { background:rgba(239,68,68,.07); border:1px solid rgba(239,68,68,.2); border-radius:12px; padding:1.2rem; margin-bottom:1.3rem; text-align:center; font-size:0.85rem; color:#fca5a5; line-height:1.6; }
+
+  .confirm-banner { background:rgba(34,197,94,.07); border:1px solid rgba(34,197,94,.2); border-radius:10px; padding:0.8rem 1rem; margin-bottom:1.2rem; font-size:0.82rem; color:#86efac; line-height:1.5; display:none; animation:up .3s ease; }
+
+  .saved-wrap { position:relative; }
+  .saved-chip { position:absolute; right:0.8rem; top:50%; transform:translateY(-50%); background:rgba(34,197,94,.12); color:#4ade80; font-size:0.65rem; font-weight:600; padding:0.15rem 0.5rem; border-radius:20px; border:1px solid rgba(34,197,94,.2); pointer-events:none; white-space:nowrap; }
+  .saved-wrap input { padding-right:6rem; }
+
+  /* ── SUCCESS ── */
+  #successScreen { min-height:100vh; flex-direction:column; align-items:center; justify-content:center; padding:2rem; text-align:center; }
+  .ok-icon { width:76px; height:76px; background:rgba(34,197,94,.1); border:2px solid rgba(34,197,94,.3); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.8rem; font-size:1.8rem; animation:pop .4s cubic-bezier(.175,.885,.32,1.275); }
+  #successScreen h2 { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; margin-bottom:0.7rem; }
+  #successScreen p  { color:var(--muted); font-size:0.92rem; line-height:1.7; max-width:300px; margin:0 auto 1.8rem; }
+  .who-sent { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.9rem 1.3rem; font-size:0.88rem; color:var(--muted); margin-bottom:1.5rem; }
+  .who-sent strong { color:var(--success); }
+  .next-note { background:rgba(249,115,22,.07); border:1px solid rgba(249,115,22,.2); border-radius:10px; padding:0.8rem 1rem; max-width:340px; font-size:0.8rem; color:var(--accent2); line-height:1.6; }
+
+  @media(max-width:460px) { .card{padding:1.8rem 1.3rem} .fcard{padding:1.4rem 1.1rem} #adminScreen{padding:1rem} }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<!-- ══ HOME ══ -->
+<div id="homeScreen" class="screen active">
+  <div class="home-card">
+    <div class="home-icon">📋</div>
+    <h1 class="home-title">Briefing Diário</h1>
+    <p class="home-sub">Selecione como deseja entrar</p>
+
+    <div class="home-divider"><span>acesso</span></div>
+
+    <button class="btn-role motorista" onclick="entrarMotorista()">
+      <div class="btn-role-icon green">🚛</div>
+      <div class="btn-role-text">
+        <strong>Sou Motorista</strong>
+        <span>Confirmar participação no briefing</span>
+      </div>
+    </button>
+
+    <button class="btn-role admin" onclick="show('adminLoginScreen')">
+      <div class="btn-role-icon orange">⚙️</div>
+      <div class="btn-role-text">
+        <strong>Sou Admin</strong>
+        <span>Configurar sessão do briefing</span>
+      </div>
+    </button>
+
+    <p style="text-align:center;font-size:0.72rem;color:var(--muted);margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+      Desenvolvido por <strong style="color:var(--text);">Michell Oliveira</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ══ ADMIN LOGIN ══ -->
+<div id="adminLoginScreen" class="screen">
+  <div class="card">
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.5rem;width:100%;">
+      <div style="text-align:center;">
+        <h1>Acesso Admin</h1>
+        <p class="sub" style="margin:0;">Área restrita</p>
+      </div>
+    </div>
+    <div class="field">
+      <label>Usuário</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn primary" onclick="doLogin()" style="margin-top:0.5rem;">Entrar →</button>
+    <button class="btn outline" onclick="show('homeScreen')">← Voltar</button>
+    <div class="err" id="loginErr">Usuário ou senha incorretos.</div>
+  </div>
+</div>
+
+<!-- ══ ADMIN PAINEL ══ -->
+<div id="adminScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-l">
+      <h2>Painel Admin</h2>
+      <span class="badge">Admin</span>
+    </div>
+    <button class="btn-sm" onclick="doLogout()">Sair</button>
+  </div>
+
+  <div class="admin-body">
+    <p class="page-title">Configurar Sessão</p>
+    <p class="page-desc">Preencha os dados da sessão e clique em <strong>"Salvar Sessão"</strong>. Os motoristas que entrarem pelo app já verão esses dados pré-preenchidos.</p>
+
+    <div id="adminBanner" class="banner green" style="display:none;"></div>
+
+    <div class="fcard">
+      <div class="fcard-title">Dados da Sessão</div>
+
+      <div class="field">
+        <label>Cargo</label>
+        <div class="sel">
+          <select id="a_cargo">
+            <option value="">Selecione...</option>
+            <option value="Dispatcher">Dispatcher</option>
+            <option value="Motorista">Motorista</option>
+            <option value="Ajudante">Ajudante</option>
+            <option value="Gestor da Frota">Gestor da Frota</option>
+            <option value="ADM Transportes">ADM Transportes</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Empresa</label>
+        <div class="sel">
+          <select id="a_empresa">
+            <option value="">Selecione...</option>
+            <option>MERCADO LIVRE</option><option>DHL</option><option>FEDEX</option>
+            <option>JADLOG</option><option>LOGGI</option><option>SEQUOIA LM</option>
+            <option>DELUNA</option><option>ON TIME SERVICOS</option><option>HELP ME SOLUCOES</option>
+            <option>CEVA</option><option>JSL</option><option>RODOPENHA</option>
+            <option>FLASHLOG</option><option>FLYPACK</option><option>BEMLOG</option>
+            <option>DHL</option><option>JADLOG</option><option>3 A Brasil</option>
+            <option>AC2 LOGISTICA</option><option>ADO TRANSPORTADORA</option>
+            <option>AFOLOG</option><option>ALTOVALE</option><option>ASCIRE</option>
+            <option>ATITUDE</option><option>AVANT</option><option>AVISTA</option>
+            <option>AXON TRANSPORTES</option><option>BASEPEX ENCOM</option>
+            <option>BGN NIKIMBA</option><option>BLD LOGISTICA</option>
+            <option>BLESSED</option><option>BRAVOX</option><option>BRJTRANSPORTES</option>
+            <option>CAIXIENSE</option><option>CARGOBR</option><option>CARGOLIFT</option>
+            <option>CARVALIMA</option><option>CMPL TRANSPORTES</option>
+            <option>COOMAP</option><option>COOPMETRO</option><option>CORDENONSI</option>
+            <option>DAPEX LOGISTICS</option><option>DDL TRANSPORTES</option>
+            <option>DECARGO</option><option>DF TRANSPORTES</option><option>DFA LOGISTICA</option>
+            <option>DL LOGISTICA</option><option>DV3</option><option>E-LOG</option>
+            <option>ECO EXPRESS</option><option>ESPINDOLA</option><option>EXCELLENCE</option>
+            <option>FADEL</option><option>FASTER LOG</option><option>HAWK TRANSPORTES</option>
+            <option>HMB LOGISTICA</option><option>ISAS TRANSPORTES</option>
+            <option>JL CASTRO</option><option>JM TRANSPORTES</option><option>JOMED</option>
+            <option>KANGU LOGISTICS</option><option>KN LOGISTICA</option><option>LEMAR</option>
+            <option>LETS EXPRESS</option><option>LOG SERVICOS</option><option>LOGGI</option>
+            <option>MANAOS</option><option>MARONITRANSP</option><option>MAXIMO</option>
+            <option>MONTERREY</option><option>MOVE SERVICOS</option><option>MSR</option>
+            <option>MURICI</option><option>NAVE TRANSPORTE</option><option>NIKKEY</option>
+            <option>NORALOG</option><option>ONZE</option><option>OPR</option>
+            <option>PRA LOG</option><option>PRATALOG</option><option>PROVISYON</option>
+            <option>RAMPONI</option><option>REDE FRETE</option><option>RIOBRANQUENSE</option>
+            <option>RN EXPRESS</option><option>RODACOOP</option><option>RODALOG</option>
+            <option>RODOFLIP</option><option>RODOIND</option><option>SANDEX LOGISTICA</option>
+            <option>SMOLKA</option><option>T2C</option><option>TECCNO</option>
+            <option>TOMBINI</option><option>TORRESTRANSP</option><option>TRANSDELEVATI</option>
+            <option>TRANSKING</option><option>TRANSMANA</option><option>TRANSRV</option>
+            <option>UNICA</option><option>UPLOGLOGISTICA</option><option>WLS CARGO</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="tema-row">
+          <label>Tema</label>
+          <button class="btn-refresh" id="btnRefresh" onclick="atualizarTemas()">
+            <span class="r-icon" id="rIcon">↻</span>
+            <span id="temaStatus">atualizar</span>
+          </button>
+        </div>
+        <div class="sel">
+          <select id="a_tema"><option value="">Selecione...</option></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Operação</label>
+        <div class="sel">
+          <select id="a_op">
+            <option value="">Selecione...</option>
+            <option value="FIRST MILE - FM">FIRST MILE — FM</option>
+            <option value="LAST MILE - LM">LAST MILE — LM</option>
+            <option value="LINE HAUL - LH">LINE HAUL — LH</option>
+            <option value="MIDDLE MILE - MM">MIDDLE MILE — MM</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Site (Localidade)</label>
+        <div class="sel">
+          <select id="a_site">
+            <option value="">Selecione...</option>
+            <option>BRRJ01_Rio de Janeiro</option>
+            <option>BRRJ02_São João do Meriti</option>
+            <option>SRJ1_Rio de Janeiro (Cordovil)</option>
+            <option>SRJ2_Queimados (Nova Iguaçu)</option>
+            <option>SRJ3_Volta Redonda</option>
+            <option>SRJ4_Campos dos Goytacazes</option>
+            <option>SRJ5_Petrópolis</option>
+            <option>SRJ6_Campo Grande RJ</option>
+            <option>SRJ7_Macaé</option>
+            <option>SRJ8_Niterói (Itaboraí)</option>
+            <option>SRJ9_Cabo Frio</option>
+            <option>SRJ10_Rio de Janeiro Barra</option>
+            <option>SRJ13_São João do Meriti</option>
+            <option>BRXRJ1_Rio de Janeiro</option>
+            <option>BRSP01_Louveira</option>
+            <option>BRSP02_Cajamar</option>
+            <option>BRSP03_Cajamar</option>
+            <option>BRSP04_Cajamar</option>
+            <option>BRSP05_Franco da Rocha</option>
+            <option>BRSP09_Cajamar</option>
+            <option>BRSP11_Guarulhos</option>
+            <option>BRSP15_Cajamar</option>
+            <option>BRSP18_Guarulhos</option>
+            <option>BRSP19_Guarulhos</option>
+            <option>SSP1_Zona Sul</option>
+            <option>SSP3_Campinas</option>
+            <option>SSP4_Ribeirão Preto</option>
+            <option>SSP5_Arena</option>
+            <option>SSP6_Zona Leste</option>
+            <option>SSP7_Zona Oeste</option>
+            <option>SSP8_São José dos Campos</option>
+            <option>SSP17_São Bernardo do Campo</option>
+            <option>SSP21_SP Centro</option>
+            <option>SSP40_Zona Norte</option>
+            <option>SMG1_Contagem</option>
+            <option>SMG2_Juiz de Fora</option>
+            <option>SMG3_Pouso Alegre</option>
+            <option>BRMG01_Extrema</option>
+            <option>BRMG02_Betim</option>
+            <option>SPR1_Curitiba</option>
+            <option>BRPR01_Araucária</option>
+            <option>SBA1_Salvador</option>
+            <option>BRBA01_Salvador</option>
+            <option>SCE1_Fortaleza</option>
+            <option>SPE1_Recife</option>
+            <option>SRS1_Porto Alegre</option>
+            <option>BRXRS1_Porto Alegre</option>
+            <option>SGO1_Goiânia</option>
+            <option>SDF1_Brasília</option>
+            <option>SDF2_Brasília</option>
+            <option>SAM1_Manaus</option>
+            <option>SPA1_Belém</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn green" onclick="salvarSessao()">💾 Salvar Sessão para Motoristas</button>
+
+    <hr>
+
+    <div class="sub-section">
+      <h3>Motoristas que já enviaram</h3>
+      <div class="sub-list" id="subList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ USER ══ -->
+<div id="userScreen" class="screen">
+  <div class="card">
+    <div class="user-header" style="justify-content:center;text-align:center;display:flex;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);">
+      <div class="user-header-text">
+        <h2>Briefing Safety</h2>
+        <p>Confirme sua participação</p>
+      </div>
+    </div>
+
+    <div id="sessionInfo"></div>
+
+    <div class="confirm-banner" id="confirmBanner">
+      👋 Olá, <strong id="helloName"></strong>! Seus dados já estão salvos.<br>
+      <span style="color:#9ca3af;font-size:0.79rem;">Só clique em "Confirmar" — leva 1 segundo! ✅</span>
+    </div>
+
+    <div class="field">
+      <label>Nome Completo *</label>
+      <div class="saved-wrap">
+        <input type="text" id="u_nome" placeholder="Seu nome completo">
+        <span class="saved-chip" id="nomeChip" style="display:none;">✓ salvo</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>E-mail *</label>
+      <div class="saved-wrap">
+        <input type="email" id="u_email" placeholder="seu@email.com">
+        <span class="saved-chip" id="emailChip" style="display:none;">✓ salvo</span>
+      </div>
+    </div>
+
+    <div class="err" id="userErr">Por favor, preencha nome e e-mail.</div>
+    <button class="btn primary" id="submitBtn" onclick="submitForm()" style="margin-top:0.5rem;">Confirmar Participação →</button>
+    <button class="btn outline" onclick="show('homeScreen')">← Voltar</button>
+  </div>
+</div>
+
+<!-- ══ SUCCESS ══ -->
+<div id="successScreen" class="screen">
+  <div class="ok-icon">✓</div>
+  <h2>Participação registrada!</h2>
+  <p>Enviado com sucesso. Obrigado pelo briefing!</p>
+  <div class="who-sent" id="whoSent"></div>
+  <div class="next-note">🔁 <strong>Da próxima vez é ainda mais rápido!</strong><br>Seu nome e e-mail já ficam salvos. Só clique em "Confirmar".</div>
+  <button class="btn outline" onclick="show('homeScreen')" style="max-width:340px;margin-top:1.5rem;">← Voltar ao início</button>
+</div>
+
+<script>
+// ══ CONFIG ══
+const ADMIN_USER      = 'admin';
+const ADMIN_PASS      = 'forms2026';
+const FORMS_ACTION    = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ/formResponse';
+const FORMS_VIEW      = 'https://docs.google.com/forms/d/e/1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ/viewform';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHhfvmHvhmmIS2b7yj2D7i_F8N6UaqNQInun4wMhLlKrSjqQNgwmftyVYeItyO6YM1/exec';
+const API_TEMAS = '/api/temas'; // Servidor local (npm run dev)
+
+// IDs dos campos do Forms real — Briefing Safety OTR
+const F = {
+  email:      'entry.859537025',
+  nome:       'entry.305174092',
+  cargo:      'entry.1530674274',
+  empresa:    'entry.170197194',
+  tema:       'entry.976109499',
+  opiniao:    'entry.987323929',
+  operacao:   'entry.2004173578',
+  site:       'entry.2067716336',
+  localidade: 'entry.1605377415',
+};
+
+// Entry ID numérico do campo Tema no Forms real (para extração precisa)
+const TEMA_ENTRY_ID = 976109499;
+
+// ══ STATE ══
+let sessionData = {};
+let submissions = JSON.parse(localStorage.getItem('bs_subs') || '[]');
+
+// ══ TELAS ══
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ══ MOTORISTA — entra direto com sessão salva pelo admin ══
+function entrarMotorista() {
+  const raw = localStorage.getItem('bs_sessao_ativa');
+  const info = document.getElementById('sessionInfo');
+
+  if (!raw) {
+    info.innerHTML = `<div class="no-session">
+      ⚠️ <strong>Nenhuma sessão ativa.</strong><br>
+      O admin ainda não configurou o briefing de hoje.<br>
+      <span style="color:#6b7280;font-size:0.78rem;">Aguarde o admin salvar a sessão e tente novamente.</span>
+    </div>`;
+    document.getElementById('submitBtn').disabled = true;
+  } else {
+    const d = JSON.parse(raw);
+    sessionData = d;
+    const labels = { cargo:'Cargo', empresa:'Empresa', tema:'Tema', op:'Operação', site:'Localidade' };
+    let rows = '<div class="si-title">Dados da sessão de hoje</div>';
+    for (const [k,v] of Object.entries(d)) {
+      if (k === 'at') continue;
+      rows += `<div class="si-row"><span class="k">${labels[k]||k}</span><span class="v">${v}</span></div>`;
+    }
+    info.innerHTML = `<div class="session-info">${rows}</div>`;
+    document.getElementById('submitBtn').disabled = false;
+  }
+
+  // Carregar nome/email salvos
+  const saved = JSON.parse(localStorage.getItem('bs_user') || 'null');
+  if (saved && saved.nome && saved.email) {
+    document.getElementById('u_nome').value  = saved.nome;
+    document.getElementById('u_email').value = saved.email;
+    document.getElementById('nomeChip').style.display  = '';
+    document.getElementById('emailChip').style.display = '';
+    document.getElementById('helloName').textContent   = saved.nome.split(' ')[0];
+    document.getElementById('confirmBanner').style.display = 'block';
+    document.getElementById('submitBtn').textContent   = raw ? '✓ Confirmar Participação' : 'Aguardando sessão...';
+  } else {
+    document.getElementById('nomeChip').style.display  = 'none';
+    document.getElementById('emailChip').style.display = 'none';
+    document.getElementById('confirmBanner').style.display = 'none';
+    document.getElementById('submitBtn').textContent = 'Confirmar Participação →';
+  }
+
+  show('userScreen');
+}
+
+// ══ LOGIN ══
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    document.getElementById('loginErr').classList.remove('show');
+    localStorage.setItem('bs_admin','1');
+    localStorage.setItem('bs_admin_login', u);
+    localStorage.setItem('bs_admin_pass', p);
+    show('adminScreen');
+    loadAdminFields();
+    renderSubs();
+  } else {
+    document.getElementById('loginErr').classList.add('show');
+  }
+}
+document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  localStorage.removeItem('bs_admin');
+  show('homeScreen');
+}
+
+// ══ CARREGAR CAMPOS ADMIN ══
+function loadAdminFields() {
+  const raw = localStorage.getItem('bs_session');
+  const d   = raw ? JSON.parse(raw) : {};
+  if (d.cargo)   document.getElementById('a_cargo').value   = d.cargo;
+  if (d.empresa) document.getElementById('a_empresa').value = d.empresa;
+  if (d.op)      document.getElementById('a_op').value      = d.op;
+  if (d.site)    document.getElementById('a_site').value    = d.site;
+
+  if (raw) {
+    const date = d.at ? new Date(d.at).toLocaleDateString('pt-BR') : '';
+    const b = document.getElementById('adminBanner');
+    b.style.display = 'block';
+    b.innerHTML = `✅ <strong>Última sessão carregada${date ? ' ('+date+')' : ''}.</strong><br>
+      <span style="color:#9ca3af">Tema anterior: <strong style="color:#fb923c">${d.tema||'—'}</strong></span>`;
+  }
+  carregarTemas(d.tema || '', false);
+}
+
+// ══ SALVAR SESSÃO ══
+function salvarSessao() {
+  const cargo   = document.getElementById('a_cargo').value;
+  const empresa = document.getElementById('a_empresa').value;
+  const tema    = document.getElementById('a_tema').value;
+  const op      = document.getElementById('a_op').value;
+  const site    = document.getElementById('a_site').value;
+
+  if (!cargo || !empresa || !tema || !op || !site) {
+    alert('Preencha todos os campos antes de salvar.');
+    return;
+  }
+
+  const d = { cargo, empresa, tema, op, site, at: new Date().toISOString() };
+
+  // Salva tanto a sessão do admin quanto a sessão ativa para motoristas
+  localStorage.setItem('bs_session', JSON.stringify(d));
+  localStorage.setItem('bs_sessao_ativa', JSON.stringify(d));
+
+  const b = document.getElementById('adminBanner');
+  b.style.display = 'block';
+  b.innerHTML = `💾 <strong>Sessão salva com sucesso!</strong><br>
+    <span style="color:#9ca3af">Tema: <strong style="color:#fb923c">${tema}</strong> — Os motoristas já podem entrar e confirmar a participação.</span>`;
+
+  b.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+// ══ TEMAS ══
+function setTemaUI(txt, spinning) {
+  const s = document.getElementById('temaStatus');
+  const i = document.getElementById('rIcon');
+  const b = document.getElementById('btnRefresh');
+  if (s) s.textContent = txt;
+  if (i) i.classList.toggle('spin', spinning);
+  if (b) b.disabled = spinning;
+}
+
+function preencherTemas(opcoes, temaAtual) {
+  const sel = document.getElementById('a_tema');
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  opcoes.forEach(op => {
+    const o = document.createElement('option');
+    o.value = op; o.textContent = op;
+    if (op === temaAtual) o.selected = true;
+    sel.appendChild(o);
+  });
+  if (temaAtual && !opcoes.includes(temaAtual)) {
+    const o = document.createElement('option');
+    o.value = temaAtual; o.textContent = temaAtual + ' (anterior)'; o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+async function carregarTemas(temaAtual, forcar) {
+  const hoje  = new Date().toISOString().slice(0,10);
+  const cache = JSON.parse(localStorage.getItem('bs_temas_cache') || 'null');
+
+  if (!forcar && cache && cache.date === hoje && cache.opcoes && cache.opcoes.length) {
+    preencherTemas(cache.opcoes, temaAtual);
+    setTemaUI(`${cache.opcoes.length} temas`, false);
+    return;
+  }
+
+  setTemaUI('buscando...', true);
+
+  try {
+    let opcoes = [];
+
+    // 1. Tenta servidor local primeiro (npm run dev) — sem CORS, sem Apps Script
+    try {
+      const r = await fetch(API_TEMAS + '?cb=' + Date.now());
+      if (r.ok) {
+        const j = await r.json();
+        if (Array.isArray(j.temas) && j.temas.length) {
+          opcoes = j.temas.filter(v => v && v.length > 0);
+        }
+      }
+    } catch(e) {}
+
+    // 2. Fallback: Apps Script
+    if (!opcoes.length) {
+      try {
+        const r = await fetch(APPS_SCRIPT_URL + '?cb=' + Date.now());
+        const j = await r.json();
+        if (Array.isArray(j.temas) && j.temas.length) {
+          opcoes = j.temas.filter(v => v && v.length > 0);
+        }
+      } catch(e) {}
+    }
+
+    if (!opcoes.length) throw new Error('sem temas');
+
+    localStorage.setItem('bs_temas_cache', JSON.stringify({ date: hoje, opcoes }));
+    preencherTemas(opcoes, temaAtual);
+    setTemaUI(`✓ ${opcoes.length} temas`, false);
+    setTimeout(() => setTemaUI(`${opcoes.length} temas`, false), 2500);
+
+  } catch(e) {
+    if (cache && cache.opcoes) {
+      preencherTemas(cache.opcoes, temaAtual);
+      setTemaUI('cache ' + (cache.date||''), false);
+    } else {
+      preencherTemas([
+        'Segurança no período de férias',
+        'Cuidados em Periodo de Chuva',
+        'Condições Adversas - Raios',
+        'Regras de Segurança',
+        'EPI\'S & Adornos',
+        'Risco com Celular',
+        'Campanha Trajeto Seguro - Trajeto',
+        'Campanha Pátio + Seguro'
+      ], temaAtual);
+      setTemaUI('offline', false);
+    }
+  }
+}
+
+function atualizarTemas() {
+  const t = document.getElementById('a_tema').value;
+  localStorage.removeItem('bs_temas_cache');
+  carregarTemas(t, true);
+}
+
+// ══ SUBMISSÕES ══
+function renderSubs() {
+  const el = document.getElementById('subList');
+  if (!submissions.length) { el.innerHTML = '<div class="empty">Nenhum envio ainda.</div>'; return; }
+  // Ordem cronológica: primeiro enviado no topo, último embaixo
+  el.innerHTML = submissions.map((s, i) =>
+    `<div class="sub-item">
+      <div class="sub-num">${i + 1}</div>
+      <div style="flex:1">
+        <div class="sub-name">${s.nome}</div>
+      </div>
+      <div class="sub-time">${s.time}</div>
+    </div>`
+  ).join('');
+  // Scroll para o último
+  el.lastElementChild && el.lastElementChild.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ══ ENVIAR ══
+async function submitForm() {
+  const nome  = document.getElementById('u_nome').value.trim();
+  const email = document.getElementById('u_email').value.trim();
+  const err   = document.getElementById('userErr');
+
+  if (!nome || !email) { err.classList.add('show'); return; }
+  err.classList.remove('show');
+
+  localStorage.setItem('bs_user', JSON.stringify({ nome, email }));
+
+  const fd = new FormData();
+  fd.append(F.email,      email);
+  fd.append(F.nome,       nome);
+  fd.append(F.cargo,      sessionData.cargo   || '');
+  fd.append(F.empresa,    sessionData.empresa || '');
+  fd.append(F.tema,       sessionData.tema    || '');
+  fd.append(F.opiniao,    '');
+  fd.append(F.operacao,   sessionData.op      || '');
+  fd.append(F.site,       sessionData.site    || '');
+  fd.append(F.localidade, '');
+  fd.append('fvv','1');
+  fd.append('fbzx','-8126613932552575501');
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+
+  try { await fetch(FORMS_ACTION, { method:'POST', mode:'no-cors', body:fd }); } catch(e) {}
+
+  const now  = new Date();
+  const time = now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+             + ' · ' + now.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  submissions.push({ nome, email, time });
+  localStorage.setItem('bs_subs', JSON.stringify(submissions));
+
+  document.getElementById('whoSent').innerHTML = `Enviado por: <strong>${nome}</strong> &lt;${email}&gt;`;
+  show('successScreen');
+}
+
+// ══ INIT ══
+(function() {
+  // Carregar login/senha salvos do Admin
+  const savedLogin = localStorage.getItem('bs_admin_login');
+  const savedPass  = localStorage.getItem('bs_admin_pass');
+  if (savedLogin) document.getElementById('loginUser').value = savedLogin;
+  if (savedPass)  document.getElementById('loginPass').value  = savedPass;
+
+  if (localStorage.getItem('bs_admin') === '1') {
+    show('adminScreen');
+    loadAdminFields();
+    renderSubs();
+  }
+})();
+</script>
+</body>
+</html>

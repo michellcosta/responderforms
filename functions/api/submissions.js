@@ -13,9 +13,20 @@ export async function onRequestGet(context) {
   const { env } = context;
   if (!env.DB) return jsonResponse({ submissions: [] });
   try {
+    // Apenas submissões do dia (horário de Brasília)
+    const now = new Date();
+    const todayBR = now.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+    const startUTC = `${todayBR} 03:00:00`; // 00:00 BRT = 03:00 UTC
+    const [y, m, d] = todayBR.split('-').map(Number);
+    const tomorrowStr = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+    const endUTC = `${tomorrowStr} 02:59:59`; // 23:59:59 BRT = 02:59:59 UTC dia seguinte
+
     const r = await env.DB.prepare(
-      'SELECT nome, email, time, created_at FROM submissions ORDER BY created_at ASC'
-    ).all();
+      `SELECT nome, email, time FROM submissions 
+       WHERE created_at >= ? AND created_at <= ? 
+       ORDER BY created_at ASC`
+    ).bind(startUTC, endUTC).all();
+
     const submissions = (r.results || []).map(s => ({
       nome: s.nome,
       email: s.email,

@@ -36,8 +36,9 @@ export async function onRequestPost(context) {
     if (!nome || !email) return jsonResponse({ error: 'Nome e email obrigatórios' }, 400);
 
     const now = new Date();
-    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      + ' · ' + now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    const opts = { timeZone: 'America/Sao_Paulo' };
+    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', ...opts })
+      + ' · ' + now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', ...opts });
 
     await env.DB.prepare(
       'INSERT INTO submissions (nome, email, time) VALUES (?, ?, ?)'

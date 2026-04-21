@@ -178,11 +178,21 @@
 
   .tema-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.45rem; }
   .tema-row label { margin:0; }
+  .tema-row-btns { display:flex; gap:0.4rem; }
   .btn-refresh { background:none; border:1px solid var(--border); color:var(--muted); padding:0.2rem 0.65rem; border-radius:6px; cursor:pointer; font-size:0.72rem; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:0.3rem; transition:all .2s; }
   .btn-refresh:hover { border-color:var(--accent); color:var(--accent); }
   .btn-refresh:disabled { opacity:0.4; cursor:not-allowed; }
   .r-icon { display:inline-block; font-size:0.9rem; line-height:1; }
   .r-icon.spin { animation:spin 1s linear infinite; }
+  .tema-footer { display:flex; align-items:center; gap:0.4rem; margin-top:0.4rem; }
+  .tema-footer-link { background:none; border:none; color:var(--muted); font-size:0.72rem; font-family:'DM Sans',sans-serif; cursor:pointer; padding:0; transition:color .15s; }
+  .tema-footer-link:hover { color:var(--accent); }
+  .tema-footer-sep { color:var(--border); font-size:0.72rem; }
+  .tema-manage { margin-top:0.5rem; display:none; }
+  .tema-chips { display:flex; flex-wrap:wrap; gap:0.4rem; }
+  .tema-chip { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:0.22rem 0.45rem 0.22rem 0.6rem; font-size:0.76rem; display:flex; align-items:center; gap:0.35rem; }
+  .chip-x { background:none; border:none; color:var(--muted); cursor:pointer; padding:0; font-size:1rem; line-height:1; transition:color .15s; }
+  .chip-x:hover { color:#f87171; }
 
   hr { border:none; border-top:1px solid var(--border); margin:1.5rem 0; }
 
@@ -222,9 +232,12 @@
   .ok-icon { width:76px; height:76px; background:rgba(34,197,94,.1); border:2px solid rgba(34,197,94,.3); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.8rem; font-size:1.8rem; animation:pop .4s cubic-bezier(.175,.885,.32,1.275); }
   #successScreen h2 { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; margin-bottom:0.7rem; }
   #successScreen p  { color:var(--muted); font-size:0.92rem; line-height:1.7; max-width:300px; margin:0 auto 1.8rem; }
-  .who-sent { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.9rem 1.3rem; font-size:0.88rem; color:var(--muted); margin-bottom:1.5rem; }
-  .who-sent strong { color:var(--success); }
-  .next-note { background:rgba(249,115,22,.07); border:1px solid rgba(249,115,22,.2); border-radius:10px; padding:0.8rem 1rem; max-width:340px; font-size:0.8rem; color:var(--accent2); line-height:1.6; }
+  .send-summary { width:100%; max-width:360px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1rem 1.1rem; margin-bottom:1.4rem; text-align:left; }
+  .send-summary .sum-title { font-family:'Syne',sans-serif; font-size:0.85rem; color:var(--success); margin-bottom:0.7rem; }
+  .send-summary .sum-row { display:flex; gap:0.5rem; font-size:0.84rem; margin-bottom:0.4rem; }
+  .send-summary .sum-row:last-child { margin-bottom:0; }
+  .send-summary .sum-k { color:var(--muted); min-width:56px; }
+  .send-summary .sum-v { color:var(--text); font-weight:500; word-break:break-word; }
 
   @media(max-width:460px) { .card{padding:1.8rem 1.3rem} .fcard{padding:1.4rem 1.1rem} #adminScreen{padding:1rem} }
 </style>
@@ -375,6 +388,16 @@
         <div class="sel">
           <select id="a_tema"><option value="">Selecione...</option></select>
         </div>
+        <div class="tema-footer">
+          <button class="tema-footer-link" onclick="toggleGerir()" id="btnGerir">✎ editar lista</button>
+          <span class="tema-footer-sep">·</span>
+          <button class="tema-footer-link" onclick="copiarBookmarklet()">📋 copiar bookmarklet</button>
+          <span id="bmCopiadoMsg" style="display:none;color:#86efac;margin-left:0.4rem;font-size:0.72rem">✅ copiado!</span>
+        </div>
+        <div class="tema-manage" id="temaManage">
+          <div class="tema-chips" id="temaChips"></div>
+        </div>
+        <a id="bookmarkletLink" style="display:none"></a>
       </div>
 
       <div class="field">
@@ -507,8 +530,7 @@
   <div class="ok-icon">✓</div>
   <h2>Participação registrada!</h2>
   <p>Enviado com sucesso. Obrigado pelo briefing!</p>
-  <div class="who-sent" id="whoSent"></div>
-  <div class="next-note">🔁 <strong>Da próxima vez é ainda mais rápido!</strong><br>Seu nome e e-mail já ficam salvos. Só clique em "Confirmar".</div>
+  <div class="send-summary" id="sendSummary"></div>
   <button class="btn outline" onclick="show('homeScreen')" style="max-width:340px;margin-top:1.5rem;">← Voltar ao início</button>
 </div>
 
@@ -518,7 +540,6 @@ const ADMIN_USER      = 'admin';
 const ADMIN_PASS      = 'forms2026';
 const FORMS_ACTION    = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ/formResponse';
 const FORMS_VIEW      = 'https://docs.google.com/forms/d/e/1FAIpQLSd5UX3FbvMhitt9M8YmAunUFzVW7g7zALSdvMXbJJbt_NOaoQ/viewform';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHhfvmHvhmmIS2b7yj2D7i_F8N6UaqNQInun4wMhLlKrSjqQNgwmftyVYeItyO6YM1/exec';
 const API_TEMAS = '/api/temas';
 const API_SESSION = '/api/session';
 const API_SUBMISSIONS = '/api/submissions';
@@ -613,6 +634,7 @@ function doLogin() {
     show('adminScreen');
     loadAdminFields();
     renderSubs();
+    initBookmarklet();
   } else {
     document.getElementById('loginErr').classList.add('show');
   }
@@ -707,74 +729,108 @@ function preencherTemas(opcoes, temaAtual) {
   }
 }
 
-async function carregarTemas(temaAtual, forcar) {
-  const hoje  = new Date().toISOString().slice(0,10);
-  const cache = JSON.parse(localStorage.getItem('bs_temas_cache') || 'null');
+// ══ BOOKMARKLET ══
+function initBookmarklet() {
+  const script = `(async()=>{try{const X=['Escolher','Choose',''];const t=[...document.querySelectorAll('[data-value]')].map(e=>e.getAttribute('data-value')).filter(v=>v&&!X.includes(v));if(!t.length){alert('Nenhum tema encontrado. Abra o dropdown do campo Tema primeiro.');return;}let add=0;for(const n of t){const r=await fetch('https://responderforms.pages.dev/api/temas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'add',nome:n})});if(r.ok)add++;}alert('✅ '+t.length+' temas sincronizados com o ResponderForms!');}catch(e){alert('Erro: '+e.message);}})();`;
+  window._bookmarkletCode = 'javascript:' + encodeURIComponent(script);
+  const el = document.getElementById('bookmarkletLink');
+  if (el) el.href = window._bookmarkletCode;
+}
 
-  if (!forcar && cache && cache.date === hoje && cache.opcoes && cache.opcoes.length) {
-    preencherTemas(cache.opcoes, temaAtual);
-    setTemaUI(`${cache.opcoes.length} temas`, false);
-    return;
-  }
-
-  setTemaUI('buscando...', true);
-
+async function copiarBookmarklet() {
   try {
-    let opcoes = [];
-
-    // 1. Tenta servidor local primeiro (npm run dev) — sem CORS, sem Apps Script
-    try {
-      const r = await fetch(API_TEMAS + '?cb=' + Date.now());
-      if (r.ok) {
-        const j = await r.json();
-        if (Array.isArray(j.temas) && j.temas.length) {
-          opcoes = j.temas.filter(v => v && v.length > 0);
-        }
-      }
-    } catch(e) {}
-
-    // 2. Fallback: Apps Script
-    if (!opcoes.length) {
-      try {
-        const r = await fetch(APPS_SCRIPT_URL + '?cb=' + Date.now());
-        const j = await r.json();
-        if (Array.isArray(j.temas) && j.temas.length) {
-          opcoes = j.temas.filter(v => v && v.length > 0);
-        }
-      } catch(e) {}
-    }
-
-    if (!opcoes.length) throw new Error('sem temas');
-
-    localStorage.setItem('bs_temas_cache', JSON.stringify({ date: hoje, opcoes }));
-    preencherTemas(opcoes, temaAtual);
-    setTemaUI(`✓ ${opcoes.length} temas`, false);
-    setTimeout(() => setTemaUI(`${opcoes.length} temas`, false), 2500);
-
+    await navigator.clipboard.writeText(window._bookmarkletCode || '');
+    const msg = document.getElementById('bmCopiadoMsg');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 4000);
   } catch(e) {
-    if (cache && cache.opcoes) {
-      preencherTemas(cache.opcoes, temaAtual);
-      setTemaUI('cache ' + (cache.date||''), false);
+    // Fallback: mostra num prompt para copiar manualmente
+    prompt('Copie o código abaixo:', window._bookmarkletCode);
+  }
+}
+
+// ══ TEMAS ══
+async function carregarTemas(temaAtual, forcar) {
+  setTemaUI('buscando...', true);
+  try {
+    const qs = forcar ? '?refresh=1&cb=' : '?cb=';
+    const r = await fetch(API_TEMAS + qs + Date.now());
+    if (!r.ok) throw new Error('erro ' + r.status);
+    const j = await r.json();
+    const opcoes = Array.isArray(j.temas) ? j.temas.filter(v => v && v.length > 0) : [];
+    if (!opcoes.length) throw new Error('sem temas');
+    preencherTemas(opcoes, temaAtual);
+    renderTemaChips(opcoes);
+    if (forcar && j.synced === false) {
+      setTemaUI(`${opcoes.length} temas (sem sync)`, false);
+      if (j.warning) alert(j.warning);
     } else {
-      preencherTemas([
-        'Segurança no período de férias',
-        'Cuidados em Periodo de Chuva',
-        'Condições Adversas - Raios',
-        'Regras de Segurança',
-        'EPI\'S & Adornos',
-        'Risco com Celular',
-        'Campanha Trajeto Seguro - Trajeto',
-        'Campanha Pátio + Seguro'
-      ], temaAtual);
-      setTemaUI('offline', false);
+      setTemaUI(`${opcoes.length} temas`, false);
     }
+  } catch(e) {
+    setTemaUI('erro', false);
   }
 }
 
 function atualizarTemas() {
-  const t = document.getElementById('a_tema').value;
-  localStorage.removeItem('bs_temas_cache');
-  carregarTemas(t, true);
+  carregarTemas(document.getElementById('a_tema').value, true);
+}
+
+function escapeHtml(v) {
+  return String(v || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderSuccessSummary(data) {
+  const box = document.getElementById('sendSummary');
+  if (!box) return;
+  const tema = escapeHtml((data.tema || sessionData.tema || 'Não informado').trim() || 'Não informado');
+  const horario = escapeHtml((data.time || 'Não informado').trim() || 'Não informado');
+  const nome = escapeHtml(data.nome);
+  const email = escapeHtml(data.email);
+  box.innerHTML = `
+    <div class="sum-title">✅ Envio registrado</div>
+    <div class="sum-row"><span class="sum-k">Nome:</span><span class="sum-v">${nome}</span></div>
+    <div class="sum-row"><span class="sum-k">E-mail:</span><span class="sum-v">${email}</span></div>
+    <div class="sum-row"><span class="sum-k">Tema:</span><span class="sum-v">${tema}</span></div>
+    <div class="sum-row"><span class="sum-k">Horário:</span><span class="sum-v">${horario}</span></div>
+  `;
+}
+
+let _gerirAberto = false;
+function toggleGerir() {
+  _gerirAberto = !_gerirAberto;
+  document.getElementById('temaManage').style.display = _gerirAberto ? 'flex' : 'none';
+  document.getElementById('btnGerir').style.color = _gerirAberto ? 'var(--accent)' : '';
+}
+
+function renderTemaChips(opcoes) {
+  const container = document.getElementById('temaChips');
+  if (!container) return;
+  container.innerHTML = opcoes.map(t =>
+    `<span class="tema-chip">${t}<button class="chip-x" title="Remover" onclick="removerTema('${t.replace(/'/g,"\\'")}')">×</button></span>`
+  ).join('');
+}
+
+async function removerTema(nome) {
+  if (!confirm(`Remover o tema "${nome}"?`)) return;
+  try {
+    const r = await fetch(API_TEMAS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'remove', nome })
+    });
+    const j = await r.json();
+    if (j.temas) {
+      preencherTemas(j.temas, document.getElementById('a_tema').value);
+      renderTemaChips(j.temas);
+      setTemaUI(`${j.temas.length} temas`, false);
+    }
+  } catch(e) {}
 }
 
 // ══ SUBMISSÕES ══
@@ -812,36 +868,36 @@ async function submitForm() {
 
   localStorage.setItem('bs_user', JSON.stringify({ nome, email }));
 
-  const fd = new FormData();
-  fd.append(F.email,      email);
-  fd.append(F.nome,       nome);
-  fd.append(F.cargo,      sessionData.cargo   || '');
-  fd.append(F.empresa,    sessionData.empresa || '');
-  fd.append(F.tema,       sessionData.tema    || '');
-  fd.append(F.opiniao,    '');
-  fd.append(F.operacao,   sessionData.op      || '');
-  fd.append(F.site,       sessionData.site    || '');
-  fd.append(F.localidade, '');
-  fd.append('fvv','1');
-  fd.append('fbzx','-8126613932552575501');
-
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'Enviando...';
-
-  try { await fetch(FORMS_ACTION, { method:'POST', mode:'no-cors', body:fd }); } catch(e) {}
+  let envioInfo = { nome, email, tema: sessionData.tema || '', time: '' };
 
   try {
     const r = await fetch(API_SUBMISSIONS, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, email })
+      body: JSON.stringify({
+        nome, email,
+        cargo:   sessionData.cargo   || '',
+        empresa: sessionData.empresa || '',
+        tema:    sessionData.tema    || '',
+        op:      sessionData.op      || '',
+        site:    sessionData.site    || '',
+      })
     });
     if (!r.ok) throw new Error('Erro ao salvar');
+    const j = await r.json();
+    envioInfo = {
+      nome: j.nome || nome,
+      email: j.email || email,
+      tema: j.tema || sessionData.tema || '',
+      time: j.time || '',
+    };
   } catch (e) {
-    console.warn('API submissions falhou:', e);
+    console.warn('Envio falhou:', e);
   }
 
-  document.getElementById('whoSent').innerHTML = `Enviado por: <strong>${nome}</strong> &lt;${email}&gt;`;
+  renderSuccessSummary(envioInfo);
   show('successScreen');
 }
 

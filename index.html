@@ -194,6 +194,11 @@
   .chip-x { background:none; border:none; color:var(--muted); cursor:pointer; padding:0; font-size:1rem; line-height:1; transition:color .15s; }
   .chip-x:hover { color:#f87171; }
 
+  .tema-import { margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--border); }
+  .tema-import-title { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:0.35rem; }
+  .tema-import-hint { font-size:0.76rem; color:var(--muted); line-height:1.5; margin:0 0 0.5rem; }
+  .tema-import-text { width:100%; box-sizing:border-box; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:ui-monospace,monospace; font-size:0.68rem; padding:0.5rem; resize:vertical; min-height:4rem; }
+
   hr { border:none; border-top:1px solid var(--border); margin:1.5rem 0; }
 
   .sub-section h3 { font-family:'Syne',sans-serif; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:0.9rem; }
@@ -387,6 +392,13 @@
         </div>
         <div class="sel">
           <select id="a_tema"><option value="">Selecione...</option></select>
+        </div>
+        <div id="temaSyncBanner" class="banner orange" style="display:none;margin-top:0.65rem;margin-bottom:0"></div>
+        <div class="tema-import" id="temaImportBox">
+          <div class="tema-import-title">Importar do HTML colado</div>
+          <p class="tema-import-hint">Se o botão “atualizar” não trouxer a lista do Forms, abra o formulário logado, <strong>Ver código-fonte</strong>, copie tudo e cole abaixo.</p>
+          <textarea id="temaImportHtml" class="tema-import-text" rows="4" placeholder="Cole aqui o HTML da página…"></textarea>
+          <button type="button" class="btn-sm" style="margin-top:0.5rem" onclick="importarTemasDoHtml()">Importar temas</button>
         </div>
         <div class="tema-footer">
           <button class="tema-footer-link" onclick="toggleGerir()" id="btnGerir">✎ editar lista</button>
@@ -713,6 +725,18 @@ function setTemaUI(txt, spinning) {
   if (b) b.disabled = spinning;
 }
 
+function setTemaSyncBanner(msg) {
+  const el = document.getElementById('temaSyncBanner');
+  if (!el) return;
+  if (msg) {
+    el.textContent = msg;
+    el.style.display = 'block';
+  } else {
+    el.textContent = '';
+    el.style.display = 'none';
+  }
+}
+
 function preencherTemas(opcoes, temaAtual) {
   const sel = document.getElementById('a_tema');
   sel.innerHTML = '<option value="">Selecione...</option>';
@@ -751,6 +775,7 @@ async function copiarBookmarklet() {
 
 // ══ TEMAS ══
 async function carregarTemas(temaAtual, forcar) {
+  setTemaSyncBanner('');
   setTemaUI('buscando...', true);
   try {
     const qs = forcar ? '?refresh=1&cb=' : '?cb=';
@@ -761,14 +786,43 @@ async function carregarTemas(temaAtual, forcar) {
     if (!opcoes.length) throw new Error('sem temas');
     preencherTemas(opcoes, temaAtual);
     renderTemaChips(opcoes);
-    if (forcar && j.synced === false) {
+    if (forcar && j.synced === false && j.warning) {
       setTemaUI(`${opcoes.length} temas (sem sync)`, false);
-      if (j.warning) alert(j.warning);
+      setTemaSyncBanner(j.warning);
     } else {
       setTemaUI(`${opcoes.length} temas`, false);
     }
   } catch(e) {
     setTemaUI('erro', false);
+  }
+}
+
+async function importarTemasDoHtml() {
+  const ta = document.getElementById('temaImportHtml');
+  const html = (ta && ta.value) ? ta.value.trim() : '';
+  if (!html) {
+    setTemaSyncBanner('Cole o HTML da página do Forms (Ver código-fonte) antes de importar.');
+    return;
+  }
+  setTemaSyncBanner('');
+  setTemaUI('importando...', true);
+  try {
+    const r = await fetch(API_TEMAS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'importHtml', html }),
+    });
+    let j = {};
+    try { j = await r.json(); } catch (_) {}
+    if (!r.ok) throw new Error(j.error || 'Falha na importação');
+    const temaAtual = document.getElementById('a_tema').value;
+    preencherTemas(j.temas, temaAtual);
+    renderTemaChips(j.temas);
+    if (ta) ta.value = '';
+    setTemaUI(`${j.total} temas`, false);
+  } catch (e) {
+    setTemaSyncBanner(e.message || String(e));
+    setTemaUI('atualizar', false);
   }
 }
 
